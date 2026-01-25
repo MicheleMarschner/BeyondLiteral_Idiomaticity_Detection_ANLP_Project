@@ -2,7 +2,6 @@ project_name: "SarcasmDetection"
 seed: 13
 
 data:
-  # Put your dataset files here (downloaded manually or via script)
   train_path: data/raw/train.csv
   dev_path: data/raw/dev.csv
   text_col: sentence

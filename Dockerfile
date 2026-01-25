@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
  && rm -rf /var/lib/apt/lists/*
 
-# 4. Copy the requirements file and install Python libraries
+# Copy the requirements file and install Python libraries
 # COPY requirements.txt .
 # RUN pip install --no-cache-dir -r requirements.txt
 
