@@ -2,12 +2,180 @@ import re
 import numpy as np
 from gensim.models import Word2Vec
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse import csr_matrix, diags
+from collections import Counter
 
-_TOKEN_RE = re.compile(r"\b\w+\b", re.UNICODE)
+from typing import Dict, List, Optional, Tuple
+
+_TOKEN_RE = re.compile(r"\b\w\w+\b", re.UNICODE)
 
 def _tokenize(s: str):
     return _TOKEN_RE.findall(str(s).lower())
+
+
+class TfidfVectorizer:
+    def __init__(self,
+        ngrams: Tuple[int, int] = (1, 1),
+        min_df: float | int = 1,
+        max_df: float | int = 1.0,
+        norm: Optional[str] = "l2",
+        smooth_idf: bool = True,
+        sublinear_tf: bool = False
+    ):  
+        self.ngrams = ngrams
+        self.min_df = min_df
+        self.max_df = max_df
+        self.norm = norm
+        self.smooth_idf = smooth_idf
+        self.sublinear_tf = sublinear_tf
+       
+        # attributes to be learned in fit():
+        self.vocab_: Dict[str, int] = {}  # term -> column index
+        self.idf_: Optional[np.ndarray] = None  # shape: (n_features,)
+        self.df_: Dict[str, int] = {}     # term -> document frequency (counts)
+        self.n_docs_: int = 0             # number of documents seen in fit()
+        self.feature_names_: Optional[list[str]] = None  # index -> term
+
+    
+    def _tokenize(self, s: str) -> List[str]:
+        return _TOKEN_RE.findall(str(s).lower())
+        
+
+    def _generate_ngrams(self, tokens: list[str]) -> list[str]:
+        min_n, max_n = self.ngrams
+        if not tokens or min_n > max_n:
+            return []
+        
+        terms = []
+        N = len(tokens)
+
+        for i in range(min_n, max_n + 1):
+            if i <= 0 or i > N:
+                continue
+            for j in range(N - i + 1):
+                terms.append(" ".join(tokens[j : j + i]))
+
+        return terms
+
+    
+    def fit(self, corpus):
+        corpus = list(corpus)
+        if not corpus:
+            raise ValueError("fit() received an empty corpus.")
+
+        self.df_.clear()
+        self.vocab_.clear()
+        self.idf_ = None
+        self.feature_names_ = None
+        self.n_docs_ = 0
+
+        # Preprocess and split into n-grams for each document
+        for doc in corpus:
+            self.n_docs_ += 1
+
+            tokens = self._tokenize(doc)
+            terms = self._generate_ngrams(tokens)
+
+            unique_terms = set(terms)  # doc frequency: count each term once per doc
+            for term in unique_terms:
+                self.df_[term] = self.df_.get(term, 0) + 1
+
+        # Apply min_df / max_df filtering
+        N = self.n_docs_                # number of docs
+        # Convert min_df/max_df (int or proportion) into absolute document-count thresholds
+        min_count = int(np.ceil(self.min_df * N)) if isinstance(self.min_df, float) else int(self.min_df)
+        max_count = int(np.floor(self.max_df * N)) if isinstance(self.max_df, float) else int(self.max_df)
+
+        min_count = max(min_count, 1)
+        max_count = min(max_count, N)
+
+        kept_terms = []
+        for term, df in self.df_.items():
+            if min_count <= df <= max_count:
+                kept_terms.append(term)
+
+        kept_terms.sort()
+        self.feature_names_ = kept_terms
+
+        # Build vocab
+        self.vocab_ = {term: i for i, term in enumerate(kept_terms)}
+        
+        # Compute idf
+        idf = np.empty(len(kept_terms), dtype=np.float64)
+
+        for term, idx in self.vocab_.items():
+            df_t = self.df_[term]                   # document frequency for term t
+            if self.smooth_idf:                     # smooth_idf implemented in sklearn package: log((1+N)/(1+df)) + 1
+                idf[idx] = np.log((1.0 + N) / (1.0 + df_t)) + 1.0   # avoid division by zero
+            else:                                   # log(N / df_t) + 1 
+                idf[idx] = np.log(N / df_t) + 1.0   # avoid division by zero
+
+        self.idf_ = idf
+
+        return self
+
+
+    def fit_transform(self, corpus):
+        """Fit on corpus (learn vocab_/idf_) then transform corpus to matrix"""
+        self.fit(corpus)
+        return self.transform(corpus)
+
+
+    def transform(self, corpus):
+        if self.idf_ is None or not self.vocab_:
+            raise ValueError("Vectorizer is not fitted. Call fit() first.")
+        
+        row_idx = []
+        col_idx = []
+        data = []
+
+        corpus = list(corpus)
+        n_docs = len(corpus)
+        n_features = len(self.vocab_)
+        
+        # compute tfidf for each term in vocab_
+        for i, doc in enumerate(corpus):
+            tokens = self._tokenize(doc)
+            terms = self._generate_ngrams(tokens)
+
+            # compute term counts for terms that exist in vocab_
+            counts = Counter(t for t in terms if t in self.vocab_)
+            if not counts:
+                continue
+
+            for term, tf in counts.items():
+                j = self.vocab_[term]
+
+                # optional sublinear TF
+                if self.sublinear_tf:
+                    tf = 1.0 + np.log(tf)           # tf = 1 + log(tf) for tf > 0
+
+                # compute tf-idf:
+                tfidf = float(tf) * float(self.idf_[j])     # tfidf(term) = tf(term) * idf_[term_index]
+
+                row_idx.append(i)       # document index i
+                col_idx.append(j)       # term/feature index j from vocab_
+                data.append(tfidf)      # TF-IDF value to store at X[i, j]
+
+        # Store only non-zero TF-IDF entries (sparse), avoiding a huge mostly-zero dense matrix.
+        X = csr_matrix((data, (row_idx, col_idx)), shape=(n_docs, n_features), dtype=np.float64)            # CSR matrix from scipy
+
+        # Normalize rows if norm == "l2"
+        if self.norm == "l2":
+            row_sq_sum = np.asarray(X.power(2).sum(axis=1)).ravel()     # sparse-friendly computation: for each row vector v do v = v / (||v||_2 + eps)
+            norms = np.sqrt(row_sq_sum)
+            norms[norms == 0.0] = 1.0               # avoid division by zero
+            X = diags(1.0 / norms) @ X
+
+        return X        # CSR matrix
+
+
+    def get_feature_names_out(self):
+        """Return feature names ordered by column index"""
+        if self.feature_names_ is None:
+            raise ValueError("Vectorizer is not fitted. Call fit() first.")
+        
+        return np.array(self.feature_names_, dtype=object)
 
 
 class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
@@ -27,7 +195,7 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         negative=10,
         epochs=10,
         seed=42,
-        workers=4,
+        workers=0,
         tfidf_min_df=2,
         tfidf_max_df=0.95,
         tfidf_norm=None,          # keep None to preserve raw tfidf magnitudes as weights
@@ -70,14 +238,13 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
 
         # ---- Fit TF-IDF with the SAME tokenization
         self.tfidf_ = TfidfVectorizer(
-            tokenizer=_tokenize,
-            preprocessor=None,
-            token_pattern=None,     # required when providing custom tokenizer
-            lowercase=False,        # we already lowercase in _tokenize
+            ngrams=(1, 1),                 # for TF-IDF weights per token
             min_df=self.tfidf_min_df,
             max_df=self.tfidf_max_df,
-            norm=self.tfidf_norm,   # None keeps weights as-is
-            max_features=self.max_features,
+            norm=self.tfidf_norm,
+            smooth_idf=True,
+            sublinear_tf=False,
+            # !TODO: Optional: implement max_features (MyTfidfVectorizer doesn't have it yet)
         )
         self.tfidf_.fit(X)
         self.feature_names_ = self.tfidf_.get_feature_names_out()
@@ -91,9 +258,7 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         W = self.w2v_.wv
         dim = self.vector_size
 
-        # sparse (n_docs, n_vocab)
-        X_tfidf = self.tfidf_.transform(X)
-
+        X_tfidf = self.tfidf_.transform(X)      # sparse (n_docs, n_vocab) (CSR)
         out = np.zeros((X_tfidf.shape[0], dim), dtype=np.float32)
 
         for i in range(X_tfidf.shape[0]):
@@ -126,13 +291,12 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         return out
     
 
-
 def build_featurizer(model_family, params, seed):
     if model_family == "logreg_word2vec":
         return TfidfWeightedWord2VecVectorizer(
             vector_size=params.get("vector_size", 200),
             window=params.get("window", 5),
-            min_count=params.get("min_df", 2),
+            min_count=params.get("min_count", 2),
             sg=1,
             negative=params.get("negative", 10),
             epochs=params.get("epochs", 10),
@@ -146,13 +310,12 @@ def build_featurizer(model_family, params, seed):
         )
     elif model_family == "logreg_tfidf":
         return TfidfVectorizer(
-            analyzer="word",
-            ngram_range=params.get("ngrams", (1, 2)),
+            ngrams=params.get("ngrams", (1, 2)),
             min_df=params.get("min_df", 2),
             max_df=params.get("max_df", 0.95),
             norm=params.get("norm", "l2"),
-            max_features=params.get("max_features", 50000),
-            lowercase=True,
+            smooth_idf=params.get("smooth_idf", True),
+            sublinear_tf=params.get("sublinear_tf", False),
         )
     else:
         raise ValueError(f"Unknown model_family: {model_family}")

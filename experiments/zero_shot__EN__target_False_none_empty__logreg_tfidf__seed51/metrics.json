@@ -1,0 +1,12 @@
+{
+  "accuracy": 0.5774647887323944,
+  "confusion_matrix_values": {
+    "fn": 157,
+    "fp": 53,
+    "tn": 234,
+    "tp": 53
+  },
+  "macro_f1": 0.5128542623501736,
+  "macro_precision": 0.54923273657289,
+  "macro_recall": 0.533855981416957
+}
