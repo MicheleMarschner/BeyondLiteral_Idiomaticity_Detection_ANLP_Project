@@ -4,25 +4,40 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import ParameterGrid
 import numpy as np
 import joblib
+from pathlib import Path
+import pandas as pd
 
-from evaluation import compute_metrics
+from typing import Any, Tuple, Dict, Optional
+
+from src.evaluation import compute_metrics
 from src.models.logreg.featurize import TfidfWeightedWord2VecVectorizer
-from models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
+from src.models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
 class LogRegRunner:
 
-    def prepare_features(self, params, config, train_df=None, val_df=None, test_df=None):
+    def prepare_features(
+        self, 
+        params: Dict[str, Any], 
+        config: Dict[str, Any], 
+        train_df: Optional[pd.DataFrame]=None, 
+        val_df: Optional[pd.DataFrame]=None, 
+        test_df: Optional[pd.DataFrame]=None
+    ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[pd.DataFrame]]:
         "featurize"
-        X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
-        X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
-        X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
+        X_train = y_train = X_val = y_val = X_test = y_test = None
+
+        if train_df is not None:
+            X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
+            X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
+        if test_df is not None:
+            X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
         return (X_train, y_train), (X_val, y_val), (X_test, y_test)
     
         
 
-    def initialize(self, params, seed, model_family):
+    def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> Pipeline:
         """Instantiate a LogisticRegression model pipeline from config with sklearn"""
 
         if model_family == "logreg_word2vec":
@@ -71,11 +86,11 @@ class LogRegRunner:
     def tune(
         self,
         config: Dict[str, Any],
-        model_path,
-        train_df,
-        val_df,
+        model_path: Path,
+        train_df: pd.DataFrame,
+        val_df: pd.DataFrame,
         threshold: float = 0.5,
-    ):
+    ) -> Tuple[Pipeline, Dict[str, Any], Dict[str, Any]]:
         
         model_family = config["model_family"]
 
@@ -123,7 +138,7 @@ class LogRegRunner:
         return best_model, results, best_params
     
 
-    def predict_proba(self, model, X):
+    def predict_proba(self, model: Pipeline, X: Any) -> np.ndarray:
 
         if isinstance(X, tuple) and len(X) >= 1:
             X = X[0]

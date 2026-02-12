@@ -6,9 +6,9 @@ import torch
 import json
 import pandas as pd
 from pathlib import Path
-from typing import Dict, Iterable, Sequence, Any
+from typing import Dict, Sequence, Any
 
-from config import Paths
+from src.config import Paths
 
 
 def set_seeds(seed: int=51, deterministic: bool=True) -> None:
@@ -72,7 +72,7 @@ def write_json(path: Path, obj: Dict[str, Any]) -> None:
         json.dump(obj, f, ensure_ascii=False, indent=2, sort_keys=True)
 
 
-def read_json(path: Path):
+def read_json(path: Path) -> Any:
     """Load a JSON file and return it as Python objects"""
     with open(path, "r") as f:
             results = json.load(f)
@@ -96,7 +96,7 @@ def read_csv_data(
     return df
 
 
-def build_input_str(input_variant):
+def build_input_str(input_variant: Dict[str, Any]) -> str:
     """Build a compact identifier string for an input-variant from the experiment config"""
     input_type = input_variant['context']                 
     include_mwe_segment = input_variant['include_mwe_segment']
@@ -120,7 +120,7 @@ def build_input_str(input_variant):
     return f"{input_type}_{include_mwe_segment}_{transform}_{features_str}"
 
 
-def build_experiment_identifier(experiment_config):
+def build_experiment_identifier(experiment_config: Dict[str, Any]) -> str:
     """Create a unique, human-readable run ID from the experiment configuration"""
     setting = experiment_config['setting']
     language = experiment_config['language']
@@ -133,7 +133,7 @@ def build_experiment_identifier(experiment_config):
     return f"{setting}__{language}__{input_str}__{model_family}__seed{seed}"
     
 
-def create_experiment_dir(experiment_config, run_dir, overwrite=False):
+def create_experiment_dir(experiment_config: Dict[str, Any], run_dir: Path, overwrite: bool=False) -> Path:
     """Create a run folder for an experiment to store outputs and artifacts; if it exists, fail unless `overwrite=True` (then recreate it)."""
     folder_name = build_experiment_identifier(experiment_config)
     experiment_dir = Path(run_dir) / folder_name
@@ -151,13 +151,13 @@ def create_experiment_dir(experiment_config, run_dir, overwrite=False):
     return experiment_dir
 
 
-def to_numpy_int(y: Iterable[Any]) -> np.ndarray:
+def to_numpy_int(y: Sequence[Any]) -> np.ndarray:
     """Convert list to int numpy array"""
     arr = np.asarray(list(y))
     return arr.astype(int)
 
 
-def to_numpy_float(y: Iterable[Any]) -> np.ndarray:
+def to_numpy_float(y: Sequence[Any]) -> np.ndarray:
     """Convert list to float numpy array"""
     arr = np.asarray(list(y))
     return arr.astype(float)

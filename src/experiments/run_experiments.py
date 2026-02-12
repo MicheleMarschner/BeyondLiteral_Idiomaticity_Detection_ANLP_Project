@@ -2,13 +2,15 @@ from pathlib import Path
 from itertools import product
 import importlib.util
 
-from evaluation import compute_metrics, make_predictions
-from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
-from utils.reporting import save_artifacts, build_test_predictions
-from training import get_model
+from typing import Dict, Any
+
+from src.evaluation import compute_metrics, make_predictions
+from src.utils.helper import set_seeds, create_experiment_dir, ensure_dirs
+from src.utils.reporting import save_artifacts, build_test_predictions
+from src.training import get_model
 from src.data import load_data_splits, build_inputs_for_splits
-from config import Paths, PATHS
-from models.factory import get_model_runner
+from src.config import Paths, PATHS
+from src.models.factory import get_model_runner
 
 
 def load_experiment_template(file: Path):
@@ -48,7 +50,7 @@ def expand_template(experiments_template):
     return runs
 
 
-def run_single_experiment(experiment_config, paths: Paths=PATHS, overwrite=False):
+def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS, overwrite: bool=False) -> None:
     """Run one experiment end-to-end: run and evaluate experiment and save all artifacts (config, predictions, metrics) to its experiment run folder"""
     experiment_dir = create_experiment_dir(experiment_config, paths.runs, overwrite)
     set_seeds(experiment_config['seed'])
@@ -56,12 +58,12 @@ def run_single_experiment(experiment_config, paths: Paths=PATHS, overwrite=False
     runner = get_model_runner(experiment_config['model_family'])
 
     train_df, val_df, test_df = load_data_splits(experiment_config, paths.data_preprocessed)
-    train_data, val_data, test_data = build_inputs_for_splits(train_df, val_df, test_df)
+    train_data, val_data, test_data = build_inputs_for_splits(train_df, val_df, test_df, experiment_config)
 
     model, best_params = get_model(experiment_config, experiment_dir, train_data, val_data, runner)
 
     _, _, test_loader = runner.prepare_features(
-        best_params=best_params,
+        params=best_params,
         config=experiment_config,
         test_df=test_data
     )
@@ -80,7 +82,7 @@ def run_single_experiment(experiment_config, paths: Paths=PATHS, overwrite=False
     )
 
 
-def run_experiments(experiments_path, overwrite=False):
+def run_experiments(experiments_path: Path, overwrite: bool=False):
     """Run all experiments defined in the template file and save the results per experiment"""
     template = load_experiment_template(experiments_path)
     run_configs = expand_template(template)   # produces a cartesian-product experiment grid

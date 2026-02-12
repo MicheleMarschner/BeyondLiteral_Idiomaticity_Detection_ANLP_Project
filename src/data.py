@@ -1,19 +1,19 @@
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Dict, Any
 from pathlib import Path
 
-from utils.helper import read_csv_data
+from src.utils.helper import read_csv_data
 
 
 # ! TODO: finish function to build input variants
-def apply_input_variant(df: pd.DataFrame, config) -> pd.DataFrame:
+def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
     """Create the model input text for this config and store it in the `Input` column"""
     df = df.copy()
     df['Input'] = df['Target'].astype(str)
     return df
 
 
-def load_data_splits(config, data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load train/val/test data for the chosen setting and build the input variant"""
     train_data_path = data_dir / f"train_{config['setting']}.csv"
     val_data_path = data_dir / f"val_{config['setting']}.csv"
@@ -30,7 +30,12 @@ def load_data_splits(config, data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame
     return train_data, val_data, test_data
 
 
-def build_inputs_for_splits(train_data, val_data, test_data, config):
+def build_inputs_for_splits(
+    train_data: pd.DataFrame, 
+    val_data: pd.DataFrame, 
+    test_data: pd.DataFrame, 
+    config: Dict[str, Any]
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     train_data = apply_input_variant(train_data, config)
     val_data = apply_input_variant(val_data, config)

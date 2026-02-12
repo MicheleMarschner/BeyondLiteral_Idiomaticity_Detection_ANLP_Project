@@ -2,10 +2,10 @@ import numpy as np
 import joblib
 from sklearn.model_selection import ParameterGrid
 
-from utils.helper import set_seeds
+from src.utils.helper import set_seeds
 from src.models.logreg_bare_metal.featurize import build_featurizer
-from evaluation import compute_metrics
-from models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
+from src.evaluation import compute_metrics
+from src.models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
 class BareMetalLogisticRegression:
@@ -46,7 +46,7 @@ class BareMetalLogisticRegression:
         
         return loss + reg
 
-    def fit(self, config, X, y):
+    def fit(self, config: Dict[str, Any], X, y):
         """Trains the weights of the model using Gradient Descent"""
         set_seeds(config.seed)
         
@@ -89,7 +89,7 @@ class BareMetalLogisticRegression:
 
 class LogRegRunner:
 
-    def prepare_features(self, params, config, train_df=None, val_df=None, test_df=None):
+    def prepare_features(self, params, config: Dict[str, Any], train_df=None, val_df=None, test_df=None):
         "featurize"
         X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
         X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
@@ -103,7 +103,7 @@ class LogRegRunner:
         return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
 
-    def initialize(self, config, params) -> BareMetalLogisticRegression:
+    def initialize(self, config: Dict[str, Any], params) -> BareMetalLogisticRegression:
         """Initialize an instance of the LogisticRegression model with the hyperparameters from config"""
 
         model = BareMetalLogisticRegression(
@@ -161,5 +161,5 @@ class LogRegRunner:
         return best_model, results, best_params
 
 
-    def predict_proba(self, model, X_test):
+    def predict_proba(self, model, X_test) -> np.ndarray:
         return model.predict_proba(X_test)  # numpy array (N,)
