@@ -1,7 +1,12 @@
 import numpy as np
+import joblib
+from sklearn.model_selection import ParameterGrid
 
-from utils.helper import set_seeds, get_cols_from_df
-from helper import build_vocab, buildw2i
+from utils.helper import set_seeds
+from src.models.logreg_bare_metal.featurize import build_featurizer
+from evaluation import compute_metrics
+from models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
+
 
 class BareMetalLogisticRegression:
     def __init__(self, learning_rate=0.01, num_iterations=1000, lambda_reg=0.0, verbose=False):
@@ -41,14 +46,8 @@ class BareMetalLogisticRegression:
         
         return loss + reg
 
-    def train(self, config, X, y):
-        """
-        Trains the model using Gradient Descent.
-        
-        Args:
-            X: numpy array of shape (n_samples, n_features)
-            y: numpy array of shape (n_samples,) containing 0 or 1
-        """
+    def fit(self, config, X, y):
+        """Trains the weights of the model using Gradient Descent"""
         set_seeds(config.seed)
         
         n_samples, n_features = X.shape
@@ -83,67 +82,84 @@ class BareMetalLogisticRegression:
 
     
     def predict_proba(self, X):
-        """
-        Returns probability of positive class.
-        """
+        """Returns probability of positive class"""
         score = np.dot(X, self.weights) + self.bias
         return self._sigmoid(score)
 
-    def predict(self, X, threshold=0.5):
-        """
-        Returns class labels (0 or 1).
-        """
-        y_pred_proba = self.predict_proba(X)
-        return np.array([1 if i > threshold else 0 for i in y_pred_proba])
-
 
 class LogRegRunner:
-    def preprocessing(config, train_data, val_data, test_data):
-        
-        ## preprocessing such as lowercasing, punctuation etc.
 
-        return train_data, val_data, test_data
+    def prepare_features(self, params, config, train_df=None, val_df=None, test_df=None):
+        "featurize"
+        X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
+        X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
+        X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
+        featurizer = build_featurizer(config['model_family'], params, config['seed'])
+        X_train = featurizer.fit_transform(X_train)
+        X_val   = featurizer.transform(X_val)
+        X_test  = featurizer.transform(X_test)
 
-    def prepare_inputs(self, train_df, val_df, test_df, config):
-        "vectorize"
-
-        inputs, labels, mwes = get_cols_from_df(train_df, ['Inputs', 'Label', 'Mwe'])
-        
-        vocab = build_vocab(inputs)
-        w2i = buildw2i(vocab)
-        
-        label_set = sorted({y for _, y in train_data})
-        label2i = {label: idx for idx, label in enumerate(label_set)}
-
-        n = len(data)
-        d = len(w2i)
-        X = np.zeros((n, d), dtype=np.float32)
-        Y = np.zeros(n, dtype=np.int64)
-
-        for i, (tokens, label) in enumerate(data):
-            for t in tokens:
-                j = w2i.get(t)
-                if j is not None:
-                    X[i, j] += 1.0
-            Y[i] = label2i[label]
-        return X, Y
+        return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
 
-    def initialize(self, config, params) -> LogisticRegression:
-        """
-        Create the bare-metal LogisticRegression model from config.
-        """
+    def initialize(self, config, params) -> BareMetalLogisticRegression:
+        """Initialize an instance of the LogisticRegression model with the hyperparameters from config"""
 
-        model = LogisticRegression(
+        model = BareMetalLogisticRegression(
             learning_rate=params.get("learning_rate", 0.01),
             num_iterations=params.get("num_iterations", 1000),
             lambda_reg=params.get("lambda_reg", 0.0)
         )
         return model
     
-    def fit():
-        pass
+    
+    def fit(self, config, model_path, train_data, val_data, threshold=0.5):
+        
+        X_train, y_train = (train_data[0], train_data[1])
+        X_val, y_val = (val_data[0], val_data[1])
+        
+        model_family = config["model_family"]
+
+        # choose the grid based on the experiment config
+        if model_family == "logreg_tfidf":
+            param_grid = tfidf_param_grid
+        elif model_family == "logreg_word2vec":
+            param_grid = word2vec_param_grid
+        else:
+            raise ValueError(f"Unknown model_family: {model_family}")
+
+
+        results = []
+        best_score = -1.0
+        best_model = None
+        best_params = None
+
+        # Run through hyperparameter grid
+        for params in ParameterGrid(param_grid):
+            model = self.initialize(params, config['seed'], config['model_family'])
+
+            model.fit(X_train, y_train)
+
+            val_proba = self.predict_proba(model, X_val)
+            val_preds = (np.asarray(val_proba) >= threshold).astype(int)
+
+            metrics = compute_metrics(val_preds, y_val)
+            macro_f1 = metrics['macro_f1']
+
+            results.append({**params, "val_score": macro_f1})
+
+            if macro_f1 > best_score:
+                best_score = macro_f1
+                best_model = model
+                best_params = dict(params)
+                joblib.dump(model, model_path)
+            
+            if best_model is None:
+                raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
+
+        return best_model, results, best_params
+
 
     def predict_proba(self, model, X_test):
         return model.predict_proba(X_test)  # numpy array (N,)
