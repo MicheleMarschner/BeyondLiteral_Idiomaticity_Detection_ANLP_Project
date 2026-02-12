@@ -2,14 +2,18 @@ import numpy as np
 import joblib
 from sklearn.model_selection import ParameterGrid
 
+from typing import Dict, Tuple, Any
+import pandas as pd
+from tqdm import tqdm
+
 from src.utils.helper import set_seeds
 from src.models.logreg_bare_metal.featurize import build_featurizer
 from src.evaluation import compute_metrics
 from src.models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
-class BareMetalLogisticRegression:
-    def __init__(self, learning_rate=0.01, num_iterations=1000, lambda_reg=0.0, verbose=False):
+class LogisticRegression:
+    def __init__(self, learning_rate=0.01, num_iterations=1000, lambda_reg=0.0):
         """
         Args:
             learning_rate (float): Step size for gradient descent.
@@ -46,78 +50,133 @@ class BareMetalLogisticRegression:
         
         return loss + reg
 
-    def fit(self, config: Dict[str, Any], X, y):
+    def fit(self, config: Dict[str, Any], X_train, y_train, X_val, y_val, threshold=0.5):
         """Trains the weights of the model using Gradient Descent"""
-        set_seeds(config.seed)
+        set_seeds(config['seed'])
         
-        n_samples, n_features = X.shape
+        n_samples, n_features = X_train.shape
         
         # Initialize parameters
+        patience = 5
+        bad = 0
+        best_f1 = -1.0
         self.weights = np.zeros(n_features)
         self.bias = 0.0
-        self.loss_history = []
+        best_weights = self.weights.copy()
+        best_bias = float(self.bias)
+        train_losses = []
+        val_losses = []
 
         # Train Loop
-        for epoch in range(self.num_iter):
-            z = np.dot(X, self.weights) + self.bias     # Linear Prediction (z = wx + b)
-            y_pred = self._sigmoid(z)                   # Compute Score
+        for epoch in tqdm(range(self.num_iter)):
+            #z = np.dot(X_train, self.weights) + self.bias     
+            #y_proba = self._sigmoid(z)                   
+
+            z = X_train @ self.weights              # Linear Prediction (z = wx + b)
+            z = np.asarray(z).ravel() + self.bias
+            y_proba = self._sigmoid(z)              # Compute Score
 
             # Gradient of negative log-likelihood (averaged)
-            grad_likelihood = np.dot(X.T, (y_pred - y)) / n_samples 
-            grad_reg = (self.lambda_reg / n_samples) * self.weights
-            gradient = grad_likelihood + grad_reg
+            #grad_likelihood = np.dot(X_train.T, (y_proba - y_train)) / n_samples 
+            #grad_reg = (self.lambda_reg / n_samples) * self.weights
+            #gradient = grad_likelihood + grad_reg
+
+            error = np.asarray(y_proba).ravel() - np.asarray(y_train).ravel()   # (n_samples,)
+
+            grad_likelihood = (X_train.T @ error) / n_samples                   # -> (n_features,)
+            grad_likelihood = np.asarray(grad_likelihood).ravel()               # force 1D
+
+            grad_reg = (self.lambda_reg / n_samples) * self.weights             # (n_features,)
+            gradient = grad_likelihood + grad_reg    
             
             # Derivative of Loss for bias
-            db = np.sum(y_pred - y) / n_samples
+            #db = np.sum(y_proba - y_train) / n_samples
+            db = np.mean(error)
 
             # Update Parameters
             self.weights -= self.lr * gradient
             self.bias -= self.lr * db
+
+            print("bias", self.bias)
             
             # Tracking Loss
             if epoch % 100 == 0:
-                current_loss = self._compute_loss(y, y_pred)
-                self.loss_history.append(current_loss)
-                print(f"Iteration {epoch}: Loss {current_loss:.4f}")
+                train_loss = self._compute_loss(y_train, y_proba)
+                train_losses.append(train_loss)
 
+                # val loss
+                #z_val = np.dot(X_val, self.weights) + self.bias
+                #val_proba = self._sigmoid(z_val)
+                z_val = X_val @ self.weights
+                z_val = np.asarray(z_val).ravel() + self.bias
+                val_proba = self._sigmoid(z_val)
+                val_preds = (val_proba >= threshold).astype(int)
+                val_loss = self._compute_loss(y_val, val_proba)
+                val_losses.append(val_loss)
+
+                print(f"Iteration {epoch}: train {train_loss:.6f} | val {val_loss:.6f}")
+                
+                metrics = compute_metrics(val_preds, y_val)
+                macro_f1 = metrics['macro_f1']
+
+                if macro_f1 > best_f1:
+                    best_f1 = macro_f1
+                    best_weights = self.weights.copy()
+                    best_bias = float(self.bias)
+                    bad = 0
+
+                else:
+                    bad += 1
+                    if bad >= patience:
+                        self.weights = best_weights
+                        self.bias = best_bias
+                        print(f"Early stopping at epoch {epoch} (best val restored).")
+                        break
+        
+        return train_losses, val_losses, best_f1
     
     def predict_proba(self, X):
         """Returns probability of positive class"""
-        score = np.dot(X, self.weights) + self.bias
+        #score = np.dot(X, self.weights) + self.bias
+        #return self._sigmoid(score)
+        score = X @ self.weights
+        score = np.asarray(score).ravel() + self.bias
         return self._sigmoid(score)
 
 
 class LogRegRunner:
 
-    def prepare_features(self, params, config: Dict[str, Any], train_df=None, val_df=None, test_df=None):
+    def prepare_features(
+        self, 
+        params: Dict[str, Any], 
+        config: Dict[str, Any], 
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         "featurize"
+        featurizer = build_featurizer(config['model_family'], params, config['seed'])
+        
         X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
-        X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
         X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
-        featurizer = build_featurizer(config['model_family'], params, config['seed'])
         X_train = featurizer.fit_transform(X_train)
-        X_val   = featurizer.transform(X_val)
         X_test  = featurizer.transform(X_test)
 
-        return (X_train, y_train), (X_val, y_val), (X_test, y_test)
+        return (X_train, y_train), (X_test, y_test), featurizer
 
 
-    def initialize(self, config: Dict[str, Any], params) -> BareMetalLogisticRegression:
+    def initialize(self, params, seed, model_family) -> LogisticRegression:
         """Initialize an instance of the LogisticRegression model with the hyperparameters from config"""
 
-        model = BareMetalLogisticRegression(
+        model = LogisticRegression(
             learning_rate=params.get("learning_rate", 0.01),
             num_iterations=params.get("num_iterations", 1000),
             lambda_reg=params.get("lambda_reg", 0.0)
-        )
+        ) 
         return model
     
     
-    def fit(self, config, model_path, train_data, val_data, threshold=0.5):
-        
-        X_train, y_train = (train_data[0], train_data[1])
-        X_val, y_val = (val_data[0], val_data[1])
+    def tune(self, config, model_path, train_df, val_df, threshold=0.5):
         
         model_family = config["model_family"]
 
@@ -129,37 +188,49 @@ class LogRegRunner:
         else:
             raise ValueError(f"Unknown model_family: {model_family}")
 
-
         results = []
-        best_score = -1.0
+        bundle = {}
+        best_f1 = -1.0
         best_model = None
         best_params = None
+        best_featurizer = None
 
         # Run through hyperparameter grid
         for params in ParameterGrid(param_grid):
+            train_data, val_data, featurizer = self.prepare_features(params=params, config=config, train_df=train_df, test_df=val_df)
+            X_train, y_train = (train_data[0], train_data[1])
+            X_val, y_val = (val_data[0], val_data[1])
+            
             model = self.initialize(params, config['seed'], config['model_family'])
 
-            model.fit(X_train, y_train)
+            train_losses, val_losses, best_val_f1 = model.fit(config, X_train, y_train, X_val, y_val)
 
-            val_proba = self.predict_proba(model, X_val)
-            val_preds = (np.asarray(val_proba) >= threshold).astype(int)
+            results.append({**params, "val_macro_f1": best_val_f1})
 
-            metrics = compute_metrics(val_preds, y_val)
-            macro_f1 = metrics['macro_f1']
-
-            results.append({**params, "val_score": macro_f1})
-
-            if macro_f1 > best_score:
-                best_score = macro_f1
+            if best_val_f1 > best_f1:
+                best_f1 = best_val_f1
                 best_model = model
                 best_params = dict(params)
-                joblib.dump(model, model_path)
+                best_featurizer = featurizer
             
             if best_model is None:
                 raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
 
+        
+        bundle = {
+            "model": best_model,                 # contains weights+bias
+            "featurizer": best_featurizer,       # crucial if you used TF-IDF / vocab
+            "best_params": best_params,
+            "threshold": threshold,
+            "macro_f1": best_f1,
+        }
+        joblib.dump(bundle, model_path)
+
         return best_model, results, best_params
 
 
-    def predict_proba(self, model, X_test) -> np.ndarray:
-        return model.predict_proba(X_test)  # numpy array (N,)
+    def predict_proba(self, model, X) -> np.ndarray:
+        if isinstance(X, tuple) and len(X) >= 1:
+            X = X[0]
+
+        return model.predict_proba(X)
