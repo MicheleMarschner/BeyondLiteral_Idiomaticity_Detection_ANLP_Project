@@ -7,8 +7,7 @@ build/
 .venv/
 .env
 
-data/raw/
-data/processed/
+
 runs/
 checkpoints/
 wandb/
