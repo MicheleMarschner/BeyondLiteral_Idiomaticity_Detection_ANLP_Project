@@ -1,0 +1,17 @@
+services:
+  runner_train:
+    build: .
+    volumes:
+      - ./data:/app/data:ro
+      - ./src/experiments/experiments_template.py:/app/src/experiments/experiments_template.py:ro
+      - ./experiments:/app/experiments
+      - ./results:/app/results
+    command: ["train", "/app/src/experiments/experiments_template.py"]
+
+  runner_eval:
+    build: .
+    volumes:
+      - ./data:/app/data:ro
+      - ./experiments:/app/experiments
+      - ./results:/app/results
+    command: ["evaluate", "/app/experiments"]
