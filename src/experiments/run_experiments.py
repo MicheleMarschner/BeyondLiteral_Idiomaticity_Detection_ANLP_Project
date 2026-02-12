@@ -62,9 +62,10 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
 
     model, best_params = get_model(experiment_config, experiment_dir, train_data, val_data, runner)
 
-    _, _, test_loader = runner.prepare_features(
+    _, test_loader, _ = runner.prepare_features(
         params=best_params,
         config=experiment_config,
+        train_df=train_data,
         test_df=test_data
     )
     test_proba = runner.predict_proba(model, test_loader)

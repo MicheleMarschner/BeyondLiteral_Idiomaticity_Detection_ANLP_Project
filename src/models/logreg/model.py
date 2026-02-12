@@ -20,20 +20,15 @@ class LogRegRunner:
         self, 
         params: Dict[str, Any], 
         config: Dict[str, Any], 
-        train_df: Optional[pd.DataFrame]=None, 
-        val_df: Optional[pd.DataFrame]=None, 
-        test_df: Optional[pd.DataFrame]=None
-    ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         "featurize"
-        X_train = y_train = X_val = y_val = X_test = y_test = None
 
-        if train_df is not None:
-            X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
-            X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
-        if test_df is not None:
-            X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
+        X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
+        X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
-        return (X_train, y_train), (X_val, y_val), (X_test, y_test)
+        return (X_train, y_train), (X_test, y_test)
     
         
 
@@ -104,13 +99,13 @@ class LogRegRunner:
 
 
         results = []
-        best_score = -1.0
+        best_f1 = -1.0
         best_model = None
         best_params = None
 
         # Run through hyperparameter grid
         for params in ParameterGrid(param_grid):
-            train_data, val_data, _ = self.prepare_features(params=params, config=config, train_df=train_df, val_df=val_df)
+            train_data, val_data = self.prepare_features(params=params, config=config, train_df=train_df, val_df=val_df)
             X_train, y_train = (train_data[0], train_data[1])
             X_val, y_val = (val_data[0], val_data[1])
 
@@ -126,8 +121,8 @@ class LogRegRunner:
 
             results.append({**params, "val_score": macro_f1})
 
-            if macro_f1 > best_score:
-                best_score = macro_f1
+            if macro_f1 > best_f1:
+                best_f1 = macro_f1
                 best_model = model
                 best_params = dict(params)
                 joblib.dump(model, model_path)
