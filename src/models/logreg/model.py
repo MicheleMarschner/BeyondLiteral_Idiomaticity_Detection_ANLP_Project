@@ -6,22 +6,14 @@ import numpy as np
 import joblib
 
 from evaluation import compute_metrics
-from models.logreg.helper import TfidfWeightedWord2VecVectorizer
+from src.models.logreg.featurize import TfidfWeightedWord2VecVectorizer
 from models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
 class LogRegRunner:
 
-    # ! TODO: preprocessing schreiben
-    def preprocessing(self, config, train_data, val_data, test_data):
-        
-        ## preprocessing such as lowercasing, punctuation etc.
-
-        return train_data, val_data, test_data
-
-
-    def prepare_inputs(self, train_df, val_df, test_df, config):
-        "vectorize"
+    def prepare_features(self, params, config, train_df=None, val_df=None, test_df=None):
+        "featurize"
         X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
         X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
         X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
@@ -76,10 +68,14 @@ class LogRegRunner:
     
     
     
-    def fit(self, config, model_path, train_data, val_data, threshold=0.5):
-
-        X_train, y_train = (train_data[0], train_data[1])
-        X_val, y_val = (val_data[0], val_data[1])
+    def tune(
+        self,
+        config: Dict[str, Any],
+        model_path,
+        train_df,
+        val_df,
+        threshold: float = 0.5,
+    ):
         
         model_family = config["model_family"]
 
@@ -99,6 +95,10 @@ class LogRegRunner:
 
         # Run through hyperparameter grid
         for params in ParameterGrid(param_grid):
+            train_data, val_data, _ = self.prepare_features(params=params, config=config, train_df=train_df, val_df=val_df)
+            X_train, y_train = (train_data[0], train_data[1])
+            X_val, y_val = (val_data[0], val_data[1])
+
             model = self.initialize(params, config['seed'], config['model_family'])
 
             model.fit(X_train, y_train)

@@ -43,13 +43,11 @@ def get_model(experiment_config, experiment_dir: Path, train_data, val_data, run
     if not model_path.exists():
         
         # Trigger full training pipeline
-        model, tuning_results, best_params = runner.fit(experiment_config, model_path, train_data, val_data)
+        model, tuning_results, best_params = runner.tune(experiment_config, model_path, train_data, val_data)
 
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
         write_json(experiment_dir / "tuning_results.json", tuning_results)
-
-        return model
 
     else:    # Re-instantiate a clean model architecture and load the best weights (Frozen state)
         print("Load model...")
@@ -59,5 +57,5 @@ def get_model(experiment_config, experiment_dir: Path, train_data, val_data, run
         model = runner.initialize(best_params, experiment_config['seed'], experiment_config['model_family'])
         model = load_model_checkpoint(model, model_path)
 
-        return model
+    return model, best_params
     

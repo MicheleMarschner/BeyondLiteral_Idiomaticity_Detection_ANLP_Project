@@ -127,32 +127,32 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
     
 
 
-    def build_featurizer(model_family, params, seed):
-        if model_family == "logreg_word2vec":
-            return TfidfWeightedWord2VecVectorizer(
-                vector_size=params.get("vector_size", 200),
-                window=params.get("window", 5),
-                min_count=params.get("min_df", 2),
-                sg=1,
-                negative=params.get("negative", 10),
-                epochs=params.get("epochs", 10),
-                workers=0,
+def build_featurizer(model_family, params, seed):
+    if model_family == "logreg_word2vec":
+        return TfidfWeightedWord2VecVectorizer(
+            vector_size=params.get("vector_size", 200),
+            window=params.get("window", 5),
+            min_count=params.get("min_df", 2),
+            sg=1,
+            negative=params.get("negative", 10),
+            epochs=params.get("epochs", 10),
+            workers=0,
 
-                tfidf_min_df=params.get("min_df", 2),
-                tfidf_max_df=params.get("max_df", 0.95),
-                tfidf_norm=None,                 # keep None for weighting
-                max_features=params.get("max_features", None),
-                fallback=params.get("fallback", "mean"),
-            )
-        elif model_family == "logreg_tfidf":
-            return TfidfVectorizer(
-                analyzer="word",
-                ngram_range=params.get("ngrams", (1, 2)),
-                min_df=params.get("min_df", 2),
-                max_df=params.get("max_df", 0.95),
-                norm=params.get("norm", "l2"),
-                max_features=params.get("max_features", 50000),
-                lowercase=True,
-            )
-        else:
-            raise ValueError(f"Unknown model_family: {model_family}")
+            tfidf_min_df=params.get("min_df", 2),
+            tfidf_max_df=params.get("max_df", 0.95),
+            tfidf_norm=None,                 # keep None for weighting
+            max_features=params.get("max_features", None),
+            fallback=params.get("fallback", "mean"),
+        )
+    elif model_family == "logreg_tfidf":
+        return TfidfVectorizer(
+            analyzer="word",
+            ngram_range=params.get("ngrams", (1, 2)),
+            min_df=params.get("min_df", 2),
+            max_df=params.get("max_df", 0.95),
+            norm=params.get("norm", "l2"),
+            max_features=params.get("max_features", 50000),
+            lowercase=True,
+        )
+    else:
+        raise ValueError(f"Unknown model_family: {model_family}")

@@ -6,7 +6,7 @@ from utils.helper import read_csv_data
 
 
 # ! TODO: finish function to build input variants
-def build_input_variant(df: pd.DataFrame, config) -> pd.DataFrame:
+def apply_input_variant(df: pd.DataFrame, config) -> pd.DataFrame:
     """Create the model input text for this config and store it in the `Input` column"""
     df = df.copy()
     df['Input'] = df['Target'].astype(str)
@@ -27,9 +27,14 @@ def load_data_splits(config, data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame
     val_data = val_data[val_data['Language'] == config['language']].copy()
     test_data = test_data[test_data['Language'] == config['language']].copy()
 
-    # Build the input variant
-    train_data = build_input_variant(train_data, config)
-    val_data = build_input_variant(val_data, config)
-    test_data = build_input_variant(test_data, config)
+    return train_data, val_data, test_data
+
+
+def build_inputs_for_splits(train_data, val_data, test_data, config):
+
+    train_data = apply_input_variant(train_data, config)
+    val_data = apply_input_variant(val_data, config)
+    test_data = apply_input_variant(test_data, config)
 
     return train_data, val_data, test_data
+

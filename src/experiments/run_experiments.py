@@ -6,7 +6,7 @@ from evaluation import compute_metrics, make_predictions
 from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
 from utils.reporting import save_artifacts, build_test_predictions
 from training import get_model
-from data import load_data_splits
+from src.data import load_data_splits, build_inputs_for_splits
 from config import Paths, PATHS
 from models.factory import get_model_runner
 
@@ -56,28 +56,21 @@ def run_single_experiment(experiment_config, paths: Paths=PATHS, overwrite=False
     runner = get_model_runner(experiment_config['model_family'])
 
     train_df, val_df, test_df = load_data_splits(experiment_config, paths.data_preprocessed)
-    train_preprocessed, val_preprocessed, test_preprocessed = runner.preprocessing(
-        experiment_config, 
-        train_df, 
-        val_df, 
-        test_df
-    )
-  
-    train_loader, val_loader, test_loader = runner.prepare_inputs(
-        train_preprocessed, 
-        val_preprocessed, 
-        test_preprocessed, 
-        experiment_config
-    )
+    train_data, val_data, test_data = build_inputs_for_splits(train_df, val_df, test_df)
 
-    model = get_model(experiment_config, experiment_dir, train_loader, val_loader, runner)
+    model, best_params = get_model(experiment_config, experiment_dir, train_data, val_data, runner)
 
+    _, _, test_loader = runner.prepare_features(
+        best_params=best_params,
+        config=experiment_config,
+        test_df=test_data
+    )
     test_proba = runner.predict_proba(model, test_loader)
     test_preds = make_predictions(test_proba)
 
-    test_predictions = build_test_predictions(test_preds, test_preprocessed['Label'], test_proba, test_preprocessed["MWE"])
+    test_predictions = build_test_predictions(test_preds, test_data['Label'], test_proba, test_data["MWE"])
 
-    metrics = compute_metrics(test_preprocessed['Label'], test_preds)
+    metrics = compute_metrics(test_data['Label'], test_preds)
 
     save_artifacts(
         run_dir=experiment_dir,
