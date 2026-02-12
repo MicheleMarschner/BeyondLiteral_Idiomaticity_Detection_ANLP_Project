@@ -1,10 +1,21 @@
-from typing import Dict, List, Any
+from typing import Dict, Tuple, Optional, Mapping, Iterable, Any
 import numpy as np
+from torch import nn
+
+from pathlib import Path
+import pandas as pd
 
 
 class ModelRunner:
 
-    def prepare_features(self, params, config, train_df=None, val_df=None, test_df=None):
+    def prepare_features(
+        self, 
+        params: Dict[str, Any], 
+        config: Dict[str, Any], 
+        train_df: Optional[pd.DataFrame]=None, 
+        val_df: Optional[pd.DataFrame]=None, 
+        test_df: Optional[pd.DataFrame]=None, 
+    ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[pd.DataFrame]]:
         """
         Input: 
             train_data/val_data/test_df: Pandas DataFrames containing the already modified input-variant examples according to the experiment `config` and labels
@@ -22,7 +33,7 @@ class ModelRunner:
         # return train_loader, val_loader, test_loader
     
 
-    def initialize(self, params, seed, model_family):
+    def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> nn.Module :
         """
         Initializes a model instance with a given set of parameters
 
@@ -37,11 +48,11 @@ class ModelRunner:
     def tune(
         self,
         config: Dict[str, Any],
-        model_path,
-        train_df,
-        val_df,
+        model_path: Path,
+        train_df: pd.DataFrame,
+        val_df: pd.DataFrame,
         threshold: float = 0.5,
-    ):
+    ) -> Tuple[nn.Module, Dict[str, Any], Dict[str, Any]]:
         """
         Entry point for hyperparameter tuning and training.
 
@@ -78,7 +89,7 @@ class ModelRunner:
         # return best_model, results, best_params
     
 
-    def predict_proba(self, model, dataloader) -> np.ndarray:
+    def predict_proba(self, model: nn.Module, dataloader: Iterable[Mapping[str, Any]]) -> np.ndarray:
         """
         Compute positive-class probabilities for a transformer over a dataloader. (Wrapper function)
         Input:

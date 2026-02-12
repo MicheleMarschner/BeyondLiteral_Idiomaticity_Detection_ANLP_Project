@@ -25,7 +25,7 @@ def build_test_predictions(
     return rows
 
 
-def flatten_metrics(metrics: dict) -> dict:
+def flatten_metrics(metrics: Dict[str, Any]) -> Dict[str, Any]:
     """Convert metrics into a flat row to log results and combine them across experiments for later analysis."""
     cm = metrics.get("confusion_matrix_values", {})
     return {

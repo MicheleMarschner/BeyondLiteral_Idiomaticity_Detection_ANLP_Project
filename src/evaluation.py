@@ -1,10 +1,10 @@
-from typing import Sequence, Iterable, Tuple, Dict, Any
+from typing import Sequence, Sequence, Tuple, Dict, Any
 import numpy as np
 
-from utils.helper import to_numpy_int, to_numpy_float
+from src.utils.helper import to_numpy_int, to_numpy_float
 
 
-def make_predictions(proba: Iterable[Any], threshold: float =0.5) -> np.ndarray:
+def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
     """Convert 1D positive-class probabilities into 0/1 predictions using a threshold."""
     
     proba = to_numpy_float(proba)
@@ -53,7 +53,7 @@ def compute_macro_metrics(tp: int, tn: int, fp: int, fn: int) ->  Tuple[float, f
 def compute_metrics(
     gold_labels: Sequence[int], 
     preds: Sequence[int],
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Compute accuracy, macro P/R/F1, and confusion-matrix counts for binary predictions."""
     
     gold_labels = to_numpy_int(gold_labels)
