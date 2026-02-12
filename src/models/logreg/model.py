@@ -25,9 +25,13 @@ class LogRegRunner:
         test_df: Optional[pd.DataFrame]=None
     ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[pd.DataFrame]]:
         "featurize"
-        X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
-        X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
-        X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
+        X_train = y_train = X_val = y_val = X_test = y_test = None
+
+        if train_df is not None:
+            X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
+            X_val, y_val     = val_df['Input'],   val_df['Label'].astype(int)
+        if test_df is not None:
+            X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
         return (X_train, y_train), (X_val, y_val), (X_test, y_test)
     

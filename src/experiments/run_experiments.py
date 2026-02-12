@@ -63,7 +63,7 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     model, best_params = get_model(experiment_config, experiment_dir, train_data, val_data, runner)
 
     _, _, test_loader = runner.prepare_features(
-        best_params=best_params,
+        params=best_params,
         config=experiment_config,
         test_df=test_data
     )

@@ -1,0 +1,20 @@
+[
+  {
+    "C": 1.0,
+    "class_weight": null,
+    "epochs": 10,
+    "l1_ratio": 0,
+    "max_df": 0.95,
+    "min_df": 1,
+    "negative": 5,
+    "ngrams": [
+      2,
+      2
+    ],
+    "norm": "l2",
+    "solver": "liblinear",
+    "val_score": 0.3375527426160338,
+    "vector_size": 100,
+    "window": 5
+  }
+]
