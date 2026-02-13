@@ -172,18 +172,15 @@ class LogRegRunner:
         X_train = featurizer.fit_transform(X_train)
         X_test  = featurizer.transform(X_test)
 
-        print("N_train:", X_train.shape[0])
-        print("vocab size:", len(featurizer.vocab_))
-        print("avg nnz/doc train:", X_train.nnz / X_train.shape[0])
-        print("empty train docs:", (X_train.getnnz(axis=1) == 0).sum())
-        print("empty val/test docs:", (X_test.getnnz(axis=1) == 0).sum())
-
-
         return (X_train, y_train), (X_test, y_test), featurizer
 
 
     def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> LogisticRegression:
         """Create a LogisticRegression instance from hyperparameters"""
+
+        print("learning_rate", params["learning_rate"])
+        print("num_iterations", params["num_iterations"])
+        print("lambda_reg", params["lambda_reg"])
 
         model = LogisticRegression(
             learning_rate=params.get("learning_rate", 0.01),
@@ -210,6 +207,8 @@ class LogRegRunner:
             param_grid = word2vec_param_grid
         else:
             raise ValueError(f"Unknown model_family: {model_family}")
+        
+        total = len(list(ParameterGrid(param_grid)))
 
         results = []
         bundle = {}
@@ -220,7 +219,8 @@ class LogRegRunner:
         best_curves = None
 
         # Run through hyperparameter grid
-        for params in ParameterGrid(param_grid):
+        for i, params in enumerate(ParameterGrid(param_grid)):
+            print()
             train_data, val_data, featurizer = self.prepare_features(params=params, config=config, train_df=train_df, test_df=val_df)
             X_train, y_train = (train_data[0], train_data[1])
             X_val, y_val = (val_data[0], val_data[1])
@@ -240,8 +240,11 @@ class LogRegRunner:
             
             if best_model is None:
                 raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
+            
+            # display progress of grid search
+            if (i+1) % 50 == 0 or i == 0:
+                print(f"[tune] {i+1}/{total} ({(i+1)/total:.1%})")
 
-        
         bundle = {
             "model": best_model,                 # contains weights+bias
             "featurizer": best_featurizer,       # crucial if you used TF-IDF / vocab
@@ -260,8 +263,4 @@ class LogRegRunner:
         if isinstance(X, tuple) and len(X) >= 1:
             X = X[0]
 
-        p = model.predict_proba(X)
-        print("proba min/mean/max:", p.min(), p.mean(), p.max())
-        print("positives @0.5:", (p >= 0.5).sum(), "/", len(p))
-
-        return p
+        return model.predict_proba(X)

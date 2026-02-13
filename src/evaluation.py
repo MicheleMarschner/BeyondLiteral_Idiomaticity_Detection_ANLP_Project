@@ -1,4 +1,4 @@
-from typing import Sequence, Sequence, Tuple, Dict, Any
+from typing import Sequence, Tuple, Dict, Any
 import numpy as np
 
 from src.utils.helper import to_numpy_int, to_numpy_float
@@ -9,6 +9,7 @@ def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
     
     proba = to_numpy_float(proba)
     assert proba.ndim == 1, (f"probabilities must be 1D after squeeze, got shape {proba.shape}")
+    
     preds = (proba >= float(threshold)).astype(int)
     return preds
 
