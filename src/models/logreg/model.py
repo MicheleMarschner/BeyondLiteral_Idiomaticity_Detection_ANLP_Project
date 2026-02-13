@@ -7,7 +7,7 @@ import joblib
 from pathlib import Path
 import pandas as pd
 
-from typing import Any, Tuple, Dict, Optional
+from typing import Any, Tuple, Dict
 
 from src.evaluation import compute_metrics
 from src.models.logreg.featurize import TfidfWeightedWord2VecVectorizer
@@ -16,21 +16,19 @@ from src.models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
 
 class LogRegRunner:
 
-    def prepare_features(
-        self, 
+    def prepare_features(self, 
         params: Dict[str, Any], 
         config: Dict[str, Any], 
         train_df: pd.DataFrame,
         test_df: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ):
         "featurize"
 
         X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
         X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
 
-        return (X_train, y_train), (X_test, y_test)
+        return (X_train, y_train), (X_test, y_test), None
     
-        
 
     def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> Pipeline:
         """Instantiate a LogisticRegression model pipeline from config with sklearn"""
@@ -43,7 +41,7 @@ class LogRegRunner:
                 sg=1,
                 negative=params.get("negative", 10),
                 epochs=params.get("epochs", 10),
-                workers=0,
+                workers=1,
 
                 tfidf_min_df=params.get("min_df", 2),
                 tfidf_max_df=params.get("max_df", 0.95),
@@ -105,7 +103,7 @@ class LogRegRunner:
 
         # Run through hyperparameter grid
         for params in ParameterGrid(param_grid):
-            train_data, val_data = self.prepare_features(params=params, config=config, train_df=train_df, val_df=val_df)
+            train_data, val_data, _ = self.prepare_features(params=params, config=config, train_df=train_df, test_df=val_df)
             X_train, y_train = (train_data[0], train_data[1])
             X_val, y_val = (val_data[0], val_data[1])
 
@@ -130,7 +128,7 @@ class LogRegRunner:
         if best_model is None:
             raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
 
-        return best_model, results, best_params
+        return best_model, results, best_params, None
     
 
     def predict_proba(self, model: Pipeline, X: Any) -> np.ndarray:
