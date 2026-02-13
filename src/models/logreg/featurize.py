@@ -27,12 +27,12 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         negative=10,
         epochs=10,
         seed=42,
-        workers=4,
+        workers=1,
         tfidf_min_df=2,
         tfidf_max_df=0.95,
         tfidf_norm=None,          # keep None to preserve raw tfidf magnitudes as weights
         fallback="mean",          # "mean" or "zeros"
-        max_features=None,
+        max_features=50000,
     ):
         self.vector_size = vector_size
         self.window = window
@@ -83,6 +83,7 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         self.feature_names_ = self.tfidf_.get_feature_names_out()
 
         return self
+    
 
     def transform(self, X):
         if self.w2v_ is None or self.tfidf_ is None:

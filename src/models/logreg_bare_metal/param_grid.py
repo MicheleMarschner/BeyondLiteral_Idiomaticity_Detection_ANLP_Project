@@ -1,18 +1,17 @@
+
 tfidf_param_grid = {
-    # TF-IDF featurizer
     "ngrams": [(2, 2)],
     "min_df": [5],
     "max_df": [0.9, 0.95],
     "norm": ["l2"],
+    #"max_features": [50000],
+    "smooth_idf": [True],
+    "sublinear_tf": [False],
     "learning_rate": [0.1],
     "num_iterations": [5000],
     "lambda_reg": [0.0, 1e-9],
-    "smooth_idf": [True],
-    "sublinear_tf": [False],
-    # "threshold": [0.3, 0.4, 0.5],
 }
-
-"""
+""""
 tfidf_param_grid = {
     # TF-IDF featurizer
     "ngrams": [(1, 2), (2, 2)],
@@ -36,6 +35,9 @@ word2vec_param_grid = {
     "min_df": [1],
     "max_df": [0.95],
     "norm": ['l2'],
+    "max_features": [50000],
+    "smooth_idf": [True],
+    "sublinear_tf": [False],
     "learning_rate": [0.05],
     "num_iterations": [3000],
     "lambda_reg": [1e-3]      
