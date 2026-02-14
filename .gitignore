@@ -9,7 +9,11 @@ build/
 
 
 runs/
-checkpoints/
 wandb/
 .DS_Store
 .ipynb_checkpoints/
+**/*.pth
+**/*.pth.tar
+
+src/models/logreg
+data/preprocessed

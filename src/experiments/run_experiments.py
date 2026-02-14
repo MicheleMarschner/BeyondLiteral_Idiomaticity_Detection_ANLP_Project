@@ -4,9 +4,9 @@ import importlib.util
 
 from typing import Dict, Any
 
-from src.evaluation import compute_metrics, make_predictions
+from src.evaluation.metrics import compute_metrics, make_predictions
 from src.utils.helper import set_seeds, create_experiment_dir, ensure_dirs
-from src.utils.reporting import save_artifacts, build_test_predictions
+from src.evaluation.reporting import save_artifacts, build_test_predictions
 from src.training import get_model
 from src.data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
 from src.config import Paths, PATHS
@@ -77,7 +77,7 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     test_proba = runner.predict_proba(model, test_loader)
     test_preds = make_predictions(test_proba)
 
-    test_predictions = build_test_predictions(test_data['DataID'], test_preds, test_data['Label'], test_proba, test_data['MWE'])
+    test_predictions = build_test_predictions(test_data['ID'], test_preds, test_data['Label'], test_proba)
 
     metrics = compute_metrics(test_data['Label'], test_preds)
 
