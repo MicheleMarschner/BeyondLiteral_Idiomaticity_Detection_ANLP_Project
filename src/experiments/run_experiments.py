@@ -4,13 +4,13 @@ import importlib.util
 
 from typing import Dict, Any
 
-from src.evaluation.metrics import compute_metrics, make_predictions
-from src.utils.helper import set_seeds, create_experiment_dir, ensure_dirs
-from src.evaluation.reporting import save_artifacts, build_test_predictions
-from src.training import get_model
-from src.data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
-from src.config import Paths, PATHS
-from src.models.factory import get_model_runner
+from evaluation.metrics import compute_metrics, make_predictions
+from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
+from evaluation.reporting import save_artifacts, build_test_predictions
+from training import get_model
+from data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
+from config import Paths, PATHS
+from models.factory import get_model_runner
 
 
 def load_experiment_template(file: Path):

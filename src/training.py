@@ -6,8 +6,8 @@ import joblib
 import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
-from src.config import DEVICE
-from src.utils.helper import ensure_dir, write_json, read_json
+from config import DEVICE
+from utils.helper import ensure_dir, write_json, read_json
 
 def load_model_checkpoint(model: Union[nn.Module, Any], model_path: Path, device=DEVICE) -> Union[nn.Module, Any]:
     """Load a saved model, freeze parameters and set it to inference mode"""

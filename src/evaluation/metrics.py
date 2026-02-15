@@ -1,7 +1,7 @@
 from typing import Sequence, Tuple, Dict, Any
 import numpy as np
 
-from src.utils.helper import to_numpy_int, to_numpy_float
+from utils.helper import to_numpy_int, to_numpy_float
 
 
 def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:

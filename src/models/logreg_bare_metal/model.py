@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Dict, Tuple, Any
 import pandas as pd
 
-from src.utils.helper import set_seeds
-from src.models.logreg_bare_metal.featurize import build_featurizer
-from src.evaluation.metrics import compute_metrics
-from src.models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
+from utils.helper import set_seeds
+from models.logreg_bare_metal.featurize import build_featurizer
+from evaluation.metrics import compute_metrics
+from models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
 class LogisticRegression:

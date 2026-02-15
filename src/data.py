@@ -2,8 +2,8 @@ import pandas as pd
 from typing import Tuple, Dict, Any
 from pathlib import Path
 
-from src.utils.helper import read_csv_data
-from src.config import MIN_TRAIN, MIN_VAL, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_VAL, MIN_PER_CLASS_TEST
+from utils.helper import read_csv_data
+from config import MIN_TRAIN, MIN_VAL, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_VAL, MIN_PER_CLASS_TEST
 
 
 # ! TODO: finish function to build input variants

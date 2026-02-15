@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, Sequence, Optional, Tuple, Any
 from sklearn.metrics import ConfusionMatrixDisplay
 
-from src.utils.helper import ensure_dir, write_json
+from utils.helper import ensure_dir, write_json
 
 
 def build_test_predictions(
@@ -67,7 +67,7 @@ def plot_confusion_matrix_from_counts(
     save_path: str,
     labels: Tuple[str, str] = ("Idiom", "Literal"),
     title: str = "Confusion Matrix",
-    ax: Optional[plt.Axes] = None,
+    ax=None,
 ):
     """
     Creates a binary confusion matrix plot:

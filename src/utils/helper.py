@@ -8,7 +8,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Sequence, Any
 
-from src.config import Paths
+from config import Paths
 
 
 def set_seeds(seed: int=51, deterministic: bool=True) -> None:
@@ -162,3 +162,25 @@ def to_numpy_float(y: Sequence[Any]) -> np.ndarray:
     arr = np.asarray(list(y))
     return arr.astype(float)
 
+
+def get_ids_by_pair(
+    df: pd.DataFrame,
+    types_df: pd.DataFrame,
+    col1: str,
+    col2: str,
+    id_col: str = "ID",
+) -> Sequence:
+    """
+    Same behavior, implemented via merge.
+    """
+    if id_col not in df.columns:
+        raise ValueError(f"{id_col=} not in df")
+    for c in (col1, col2):
+        if c not in df.columns:
+            raise ValueError(f"{c=} not in df")
+        if c not in types_df.columns:
+            raise ValueError(f"{c=} not in types_df")
+
+    keys = types_df[[col1, col2]].drop_duplicates()
+    matched = df.merge(keys, on=[col1, col2], how="inner")
+    return matched[id_col].tolist()
