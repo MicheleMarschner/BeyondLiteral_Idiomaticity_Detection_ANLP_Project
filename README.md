@@ -31,7 +31,7 @@ The repository has the following structure:
     BeyondLiteral_Idiomaticity_Detection_ANLP_Project/
     ├── data/                           # Datasets (not tracked or partially tracked, depending on your setup)
     │   ├── raw/                        # Original/raw data dumps (as downloaded)
-    │   ├── preprocessed/               # Cleaned/split/feature-ready CSVs (e.g., train/val/test)
+    │   ├── preprocessed/               # Cleaned/split/feature-ready CSVs (e.g., train/dev/test)
     │   └── README.md                   # Notes on data sources + preprocessing decisions
     ├── documentation/                  # Project docs (reports, notes, figures, writeups)
     ├── experiments/                    # Per-run artifacts (one folder per experiment)
