@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as plt
 from pathlib import Path
-from typing import Dict, Sequence, Optional, Tuple, Any
-from sklearn.metrics import ConfusionMatrixDisplay
+from typing import Dict, Sequence, Tuple, Any
 
 from utils.helper import ensure_dir, write_json
 
