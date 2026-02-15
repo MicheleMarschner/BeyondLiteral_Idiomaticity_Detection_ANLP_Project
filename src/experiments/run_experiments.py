@@ -59,7 +59,7 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     runner = get_model_runner(experiment_config['model_family'])
 
     train_df, val_df, test_df = load_data_splits(experiment_config, paths.data_preprocessed)
-    split_stats, is_too_small, reasons = compute_and_check_split_stats(train_df, val_df, test_df)
+    split_stats, is_too_small, reasons = compute_and_check_split_stats(train_df, val_df, test_df, experiment_config['language'])
     if is_too_small:
         print(f"[skip] experiment | " + " ; ".join(reasons))
         return None
