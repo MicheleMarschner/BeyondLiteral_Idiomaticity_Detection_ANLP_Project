@@ -325,6 +325,8 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
 def build_featurizer(model_family: str, params: Dict[str, Any]):
     """Create and configure the text featurizer for the selected model family"""
 
+    print(params.get("max_df", 0.95))
+
     if model_family == "logreg_word2vec":
         return TfidfWeightedWord2VecVectorizer(
             # Word2Vec training hyperparameters

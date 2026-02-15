@@ -6,8 +6,8 @@ import joblib
 import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
-from src.config import DEVICE
-from src.utils.helper import ensure_dir, write_json, read_json
+from config import DEVICE
+from utils.helper import ensure_dir, write_json, read_json
 
 def load_model_checkpoint(model: Union[nn.Module, Any], model_path: Path, device=DEVICE) -> Union[nn.Module, Any]:
     """Load a saved model, freeze parameters and set it to inference mode"""
@@ -16,7 +16,7 @@ def load_model_checkpoint(model: Union[nn.Module, Any], model_path: Path, device
         return joblib.load(model_path)
     
     if model_path.suffix == ".pth":
-        # Load serialized weights;
+        # Load serialized weights
         state_dict = torch.load(model_path, weights_only=True, map_location=device)     # map_location ensures compatibility if moving between CPU/GPU
         model.load_state_dict(state_dict, strict=True)      # Enforce exact structural match between the architecture and the saved weights
 
@@ -46,10 +46,9 @@ def get_model(
     ext = ".joblib" if model_family.startswith("logreg") else ".pth"
 
     ## check model according to experiment config name
-    ## !TODO: what should be the model name
     model_path = Path(f"{experiment_dir}/{model_family}{ext}")
 
-    # Check for existing artifacts (Lazy Loading)
+    # Check for existing artifacts
     if not model_path.exists():
         
         # Trigger full training pipeline
@@ -59,6 +58,7 @@ def get_model(
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
         write_json(experiment_dir / "tuning_results.json", tuning_results)
+        pd.DataFrame(tuning_results).to_csv(experiment_dir / "tuning_results.csv", index=False)
         write_json(experiment_dir / "learning_curves.json", best_curves)
 
     else:    # Re-instantiate a clean model architecture and load the best weights (Frozen state)

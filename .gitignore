@@ -9,7 +9,13 @@ build/
 
 
 runs/
-checkpoints/
 wandb/
 .DS_Store
 .ipynb_checkpoints/
+**/*.pth
+**/*.pth.tar
+
+src/models/logreg
+src/models/logreg_bare_metal/evaluation.py
+data/preprocessed
+src/analysis

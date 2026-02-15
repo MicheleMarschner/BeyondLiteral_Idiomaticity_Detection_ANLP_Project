@@ -18,19 +18,21 @@ class ModelRunner:
     ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame], Optional[pd.DataFrame]]:
         """
         Input: 
-            train_data/val_data/test_df: Pandas DataFrames containing the already modified input-variant examples according to the experiment `config` and labels
-
+            train_df/test_df: Pandas DataFrames containing the already modified input-variant examples according to the experiment `config` and labels 
+            (function is called twice: first with val data and later with the actual test data)
+            params: contains one set of hyperparameters
             config: Experiment configuration dict (setting, language, input_variant, model_family, seed)
 
-        1. Prepare train/val/test for the transformer models: tokenize inputs according to params
+        1. Prepare train/test for the transformer models: tokenize inputs according to params
         2. Setup data Loaders. Use config['seed'] for deterministic shuffling of the train data
 
         Output:
             train/val/test data loader
+            featurizer
         """
         pass
 
-        # return train_loader, val_loader, test_loader
+        # return train_loader, val_loader, featurizer
     
 
     def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> nn.Module :
@@ -75,18 +77,19 @@ class ModelRunner:
             best_model: Trained model instance with the best hyperparameter setting.
             results: List of dicts, one per tried setting, containing params + validation score(s).
             best_params: Dict of the selected best hyperparameters (the entry from `param_grid` with highest score, including for the tokenizer).
+            best_curves: training and val losses (+ best_epoch) of the best hyperparameter setting for this experiment
         """
         pass
 
         # for params in params_grid:
-        #    train_loader, val_loader, _ = self.prepare_features(params, config, train_df=train_df, val_df=val_df)
-        #    model = self.initialize(config, params)
-        #    model, val_score = model.train(model, train_loader, val_loader, config['seed'], params) or self.train(model, train_loader, val_loader, config['seed'], params)
+        #    train_loader, val_loader, featurizer = self.prepare_features(params, config, train_df=train_df, test_df=val_df)
+        #    model = self.initialize(params, config['seed'], config['model_family'])
+        #    best_val_f1, loss_curves = model.train(model, train_loader, val_loader, config['seed'], params) or self.train(model, train_loader, val_loader, config['seed'], params)
         #    results.append({**params, "val_score": float(val_score)})
-        #    if val_score > best_score:
+        #    if val_f1 > best_f1:
         #        ....
 
-        # return best_model, results, best_params
+        # return best_model, results, best_params, best_curves
     
 
     def predict_proba(self, model: nn.Module, dataloader: Iterable[Mapping[str, Any]]) -> np.ndarray:
