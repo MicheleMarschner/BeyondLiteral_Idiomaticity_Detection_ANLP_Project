@@ -24,7 +24,7 @@ def main() -> None:
         if not args.arg1:
             raise SystemExit("evaluation requires arg1 = experiment_id")
         
-        run_analysis(Path(args.arg1))
+    #    return
 
     if args.action == "analyse":
         if args.arg1 is None:
