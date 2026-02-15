@@ -16,10 +16,12 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 
 def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load train/val/test data for the chosen setting and build the input variant"""
+
+    setting_folder = data_dir / f"{config['setting']}_splits"
     
-    train_data_path = data_dir / f"train_{config['setting']}.csv"
-    val_data_path = data_dir / f"val_{config['setting']}.csv"
-    test_data_path = data_dir / f"test_{config['setting']}.csv"
+    train_data_path = setting_folder / f"{config['setting']}_train.csv"
+    val_data_path = setting_folder / f"{config['setting']}_dev.csv"
+    test_data_path = setting_folder / f"{config['setting']}_test.csv"
 
     train_data = read_csv_data(train_data_path)
     val_data = read_csv_data(val_data_path)
@@ -58,6 +60,7 @@ def compute_and_check_split_stats(
     train_df: pd.DataFrame,
     val_df: pd.DataFrame,
     test_df: pd.DataFrame,
+    language: str,
     label_col: str = "Label",
 ) -> Tuple[dict[str, dict], bool, list[str]]:
     """Summarize split sizes and per-split label counts and checks if sample size is enough to run the experiment"""
@@ -80,6 +83,9 @@ def compute_and_check_split_stats(
     label_counts_by_split = {}
     for split, df in splits.items():
         label_counts_by_split[split] = _label_counts(df, label_col)
+    
+    if language == 'GL': 
+        return split_stats, (len(reasons) != 0), reasons
 
     for split, counts in label_counts_by_split.items():
         if len(counts) < 2:
