@@ -3,7 +3,7 @@ from typing import Tuple, Dict, Any
 from pathlib import Path
 
 from utils.helper import read_csv_data
-from config import MIN_TRAIN, MIN_VAL, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_VAL, MIN_PER_CLASS_TEST
+from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_DEV, MIN_PER_CLASS_TEST
 
 
 # ! TODO: finish function to build input variants
@@ -15,38 +15,38 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 
 
 def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Load train/val/test data for the chosen setting and build the input variant"""
+    """Load train/dev/test data for the chosen setting and build the input variant"""
 
     setting_folder = data_dir / f"{config['setting']}_splits"
     
     train_data_path = setting_folder / f"{config['setting']}_train.csv"
-    val_data_path = setting_folder / f"{config['setting']}_dev.csv"
+    dev_data_path = setting_folder / f"{config['setting']}_dev.csv"
     test_data_path = setting_folder / f"{config['setting']}_test.csv"
 
     train_data = read_csv_data(train_data_path)
-    val_data = read_csv_data(val_data_path)
+    dev_data = read_csv_data(dev_data_path)
     test_data = read_csv_data(test_data_path)
 
     train_data = train_data[train_data['Language'] == config['language']].copy()
-    val_data = val_data[val_data['Language'] == config['language']].copy()
+    dev_data = dev_data[dev_data['Language'] == config['language']].copy()
     test_data = test_data[test_data['Language'] == config['language']].copy()
 
-    return train_data, val_data, test_data
+    return train_data, dev_data, test_data
 
 
 def build_inputs_for_splits(
     train_data: pd.DataFrame, 
-    val_data: pd.DataFrame, 
+    dev_data: pd.DataFrame, 
     test_data: pd.DataFrame, 
     config: Dict[str, Any]
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Apply the configured input variant to train/val/test splits and return the updated DataFrames"""
+    """Apply the configured input variant to train/dev/test splits and return the updated DataFrames"""
 
     train_data = apply_input_variant(train_data, config)
-    val_data = apply_input_variant(val_data, config)
+    dev_data = apply_input_variant(dev_data, config)
     test_data = apply_input_variant(test_data, config)
 
-    return train_data, val_data, test_data
+    return train_data, dev_data, test_data
 
 
 def _label_counts(df: pd.DataFrame, label_col: str = "Label") -> dict[int, int]:
@@ -58,7 +58,7 @@ def _label_counts(df: pd.DataFrame, label_col: str = "Label") -> dict[int, int]:
 
 def compute_and_check_split_stats(
     train_df: pd.DataFrame,
-    val_df: pd.DataFrame,
+    dev_df: pd.DataFrame,
     test_df: pd.DataFrame,
     language: str,
     label_col: str = "Label",
@@ -68,8 +68,8 @@ def compute_and_check_split_stats(
     reasons = []
 
     # size checks
-    split_sizes = {"train": len(train_df), "val": len(val_df), "test": len(test_df)}
-    min_sizes = {"train": MIN_TRAIN, "val": MIN_VAL, "test": MIN_TEST}
+    split_sizes = {"train": len(train_df), "dev": len(dev_df), "test": len(test_df)}
+    min_sizes = {"train": MIN_TRAIN, "dev": MIN_VAL, "test": MIN_TEST}
 
     for split, n in split_sizes.items():
         min_n = min_sizes[split]
@@ -77,8 +77,8 @@ def compute_and_check_split_stats(
             reasons.append(f"{split} too small: {n} < {min_n}")
 
     # label / per-class checks
-    splits = {"train": train_df, "val": val_df, "test": test_df}
-    min_per_class = {"train": MIN_PER_CLASS_TRAIN, "val": MIN_PER_CLASS_VAL, "test": MIN_PER_CLASS_TEST}
+    splits = {"train": train_df, "dev": dev_df, "test": test_df}
+    min_per_class = {"train": MIN_PER_CLASS_TRAIN, "dev": MIN_PER_CLASS_VAL, "test": MIN_PER_CLASS_TEST}
 
     label_counts_by_split = {}
     for split, df in splits.items():

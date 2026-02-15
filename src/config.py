@@ -12,7 +12,6 @@ class Paths:
     runs: Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # repo root (…/BeyondLiteral_Idiomaticity_Detection)
-
 IN_DOCKER = os.getenv("IN_DOCKER", "0") == "1"
 
 if IN_DOCKER:

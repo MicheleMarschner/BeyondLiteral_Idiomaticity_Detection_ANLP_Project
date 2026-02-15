@@ -50,8 +50,8 @@ class LogisticRegression:
         config: Dict[str, Any], 
         X_train: Any, 
         y_train: Any, 
-        X_val: Any, 
-        y_val: Any, 
+        X_dev: Any, 
+        y_dev: Any, 
         threshold: float=0.5
     ) -> Tuple[list[float], list[float], float]:
         """Train the model; return tracked losses and best validation macro-F1"""
@@ -70,7 +70,7 @@ class LogisticRegression:
         best_bias = float(self.bias)
         best_epoch = 0
         train_losses = []
-        val_losses = []
+        dev_losses = []
 
         # Train Loop
         for epoch in range(self.num_iter):
@@ -107,19 +107,19 @@ class LogisticRegression:
                 train_loss = self._compute_loss(y_train, y_proba)
                 train_losses.append(train_loss)
 
-                # val loss
-                #z_val = np.dot(X_val, self.weights) + self.bias
-                #val_proba = self._sigmoid(z_val)
-                z_val = X_val @ self.weights
-                z_val = np.asarray(z_val).ravel() + self.bias
-                val_proba = self._sigmoid(z_val)
-                val_preds = (val_proba >= threshold).astype(int)
-                val_loss = self._compute_loss(y_val, val_proba)
-                val_losses.append(val_loss)
+                # dev loss
+                #z_dev = np.dot(X_dev, self.weights) + self.bias
+                #dev_proba = self._sigmoid(z_dev)
+                z_dev = X_dev @ self.weights
+                z_dev = np.asarray(z_dev).ravel() + self.bias
+                dev_proba = self._sigmoid(z_dev)
+                dev_preds = (dev_proba >= threshold).astype(int)
+                dev_loss = self._compute_loss(y_dev, dev_proba)
+                dev_losses.append(dev_loss)
 
-                print(f"Iteration {epoch}: train {train_loss:.6f} | val {val_loss:.6f}")
+                print(f"Iteration {epoch}: train {train_loss:.6f} | dev {dev_loss:.6f}")
                 
-                metrics = compute_metrics(val_preds, y_val)
+                metrics = compute_metrics(dev_preds, y_dev)
                 macro_f1 = metrics['macro_f1']
 
                 if macro_f1 > best_f1:
@@ -134,12 +134,12 @@ class LogisticRegression:
                     if bad >= patience:
                         self.weights = best_weights
                         self.bias = best_bias
-                        print(f"Early stopping at epoch {epoch} (best val restored).")
+                        print(f"Early stopping at epoch {epoch} (best dev restored).")
                         break
         
         return best_f1, {
             "train_loss": train_losses,
-            "val_loss": val_losses,
+            "dev_loss": dev_losses,
             "best_epoch": best_epoch,
         }
     
@@ -193,7 +193,7 @@ class LogRegRunner:
         config: Dict[str, Any],
         model_path: Path,
         train_df: pd.DataFrame,
-        val_df: pd.DataFrame,
+        dev_df: pd.DataFrame,
         threshold: float=0.5
     ) -> Tuple[LogisticRegression, Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
@@ -221,25 +221,25 @@ class LogRegRunner:
         # Run through hyperparameter grid
         for i, params in enumerate(ParameterGrid(param_grid)):
             print()
-            train_data, val_data, featurizer = self.prepare_features(params=params, config=config, train_df=train_df, test_df=val_df)
+            train_data, dev_data, featurizer = self.prepare_features(params=params, config=config, train_df=train_df, test_df=dev_df)
             X_train, y_train = (train_data[0], train_data[1])
-            X_val, y_val = (val_data[0], val_data[1])
+            X_dev, y_dev = (dev_data[0], dev_data[1])
             
             model = self.initialize(params, config['seed'], config['model_family'])
 
-            best_val_f1, loss_curves = model.fit(config, X_train, y_train, X_val, y_val)
+            best_dev_f1, loss_curves = model.fit(config, X_train, y_train, X_dev, y_dev)
 
-            results.append({**params, "val_macro_f1": best_val_f1})
+            results.append({**params, "dev_macro_f1": best_dev_f1})
 
-            if best_val_f1 > best_f1:
-                best_f1 = best_val_f1
+            if best_dev_f1 > best_f1:
+                best_f1 = best_dev_f1
                 best_model = model
                 best_params = dict(params)
                 best_featurizer = featurizer
                 best_curves = loss_curves
             
             if best_model is None:
-                raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
+                raise RuntimeError("Tuning failed: no devid parameter combination produced a trained model.")
             
             # display progress of grid search
             if (i+1) % 50 == 0 or i == 0:
