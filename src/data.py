@@ -69,7 +69,7 @@ def compute_and_check_split_stats(
 
     # size checks
     split_sizes = {"train": len(train_df), "dev": len(dev_df), "test": len(test_df)}
-    min_sizes = {"train": MIN_TRAIN, "dev": MIN_VAL, "test": MIN_TEST}
+    min_sizes = {"train": MIN_TRAIN, "dev": MIN_DEV, "test": MIN_TEST}
 
     for split, n in split_sizes.items():
         min_n = min_sizes[split]
@@ -78,7 +78,7 @@ def compute_and_check_split_stats(
 
     # label / per-class checks
     splits = {"train": train_df, "dev": dev_df, "test": test_df}
-    min_per_class = {"train": MIN_PER_CLASS_TRAIN, "dev": MIN_PER_CLASS_VAL, "test": MIN_PER_CLASS_TEST}
+    min_per_class = {"train": MIN_PER_CLASS_TRAIN, "dev": MIN_PER_CLASS_DEV, "test": MIN_PER_CLASS_TEST}
 
     label_counts_by_split = {}
     for split, df in splits.items():
