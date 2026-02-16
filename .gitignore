@@ -14,3 +14,6 @@ wandb/
 .ipynb_checkpoints/
 **/*.pth
 **/*.pth.tar
+
+./src/analysis
+./src/models/logreg
