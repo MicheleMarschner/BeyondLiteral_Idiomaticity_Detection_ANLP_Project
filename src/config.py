@@ -35,10 +35,10 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ### Data configs
 MIN_TRAIN = 500
-MIN_VAL = 200
+MIN_DEV = 200
 MIN_TEST = 200
 
 # require at least k samples per class in each split
 MIN_PER_CLASS_TRAIN = 100
-MIN_PER_CLASS_VAL = 50
+MIN_PER_CLASS_DEV = 50
 MIN_PER_CLASS_TEST = 50
