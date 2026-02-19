@@ -64,13 +64,13 @@ def compute_metrics(eval_pred):
 class BERTRunner:
     def prepare_features(self, 
         params: Dict[str, Any], 
-        exp_config: Dict[str, Any], 
+        config: Dict[str, Any], 
         train_df: pd.DataFrame,
         test_df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Fit a featurizer on train text and transform train/test into feature matrices"""
         
-        set_seeds(exp_config['seed'])
+        set_seeds(config['seed'])
         train_dataset, dev_dataset, tokenizer = tokenize_input(params, train_df, test_df)
         
         return train_dataset, dev_dataset, tokenizer

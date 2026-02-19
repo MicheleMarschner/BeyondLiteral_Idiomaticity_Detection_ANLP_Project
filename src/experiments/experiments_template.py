@@ -31,6 +31,6 @@ EXPERIMENTS = ExperimentTemplate(
     input_variant=[
         {"context": "target", "include_mwe_segment": False, "transform": "none", "features": []},
     ],
-    model_families=["mBERT"],
+    model_families=["modernBERT"],
     seeds=[51]
 )
