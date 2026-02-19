@@ -5,8 +5,6 @@ from torch import nn
 from pathlib import Path
 import pandas as pd
 
-from src.config import DEVICE
-
 
 class ModelRunner:
 
