@@ -1,11 +1,13 @@
 from typing import Any, Dict
 
 from models.logreg_bare_metal.model import LogRegRunner
+from models.dummyBERT.BERTRunner import mBERTRunner
 # from models.logreg.model import LogRegRunner
 
 RUNNERS: Dict[str, Any] = {
     "logreg_tfidf": LogRegRunner,
     "logreg_word2vec": LogRegRunner,
+    "mBERT": mBERTRunner,
 }
 
 def get_model_runner(model_family: str):

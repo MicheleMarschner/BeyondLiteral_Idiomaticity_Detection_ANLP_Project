@@ -31,6 +31,6 @@ EXPERIMENTS = ExperimentTemplate(
     input_variant=[
         {"context": "target", "include_mwe_segment": False, "transform": "none", "features": []},
     ],
-    model_families=["logreg_word2vec"],
+    model_families=["mBERT"],
     seeds=[51]
 )

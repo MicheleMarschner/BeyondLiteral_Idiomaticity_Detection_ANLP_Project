@@ -11,33 +11,47 @@ from datasets import Dataset
 from utils.helper import set_seeds
 
 
-def tokenize_function(examples, hyper_params):
-    """Tokenize text with padding and truncation"""
-
-    max_length = hyper_params.get("max_length")
-    
-    MODEL_NAME = "bert-base-multilingual-cased"
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
+def tokenize_function(examples, tokenizer, max_length: int):
+    """Tokenize text with padding and truncation."""
     return tokenizer(
         examples["text"],
         padding="max_length",
         truncation=True,
-        max_length=max_length
+        max_length=max_length,
     )
 
 
 def tokenize_input(hyper_params, train_data, dev_data):
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
-    
-    train_dataset = train_dataset.map(tokenize_function, hyper_params, batched=True)
-    dev_dataset = dev_dataset.map(tokenize_function, hyper_params, batched=True)
 
-    train_dataset.set_format("torch", columns=["input_ids", "text", "label"])
-    dev_dataset.set_format("torch", columns=["input_ids", "text", "label"])
+    MODEL_NAME = "bert-base-multilingual-cased"
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-    return train_dataset, dev_dataset
+    max_length = int(hyper_params["max_length"])
+
+    train_dataset = train_dataset.map(
+        tokenize_function,
+        batched=True,
+        fn_kwargs={"tokenizer": tokenizer, "max_length": max_length},
+    )
+    dev_dataset = dev_dataset.map(
+        tokenize_function,
+        batched=True,
+        fn_kwargs={"tokenizer": tokenizer, "max_length": max_length},
+    )
+
+    # rename Label -> labels (as HF expects 'labels' -> we should do that already before when creating the data)
+    if "Label" in train_dataset.column_names:
+        train_dataset = train_dataset.rename_column("Label", "labels")
+    if "Label" in dev_dataset.column_names:
+        dev_dataset = dev_dataset.rename_column("Label", "labels")
+
+    cols = ["input_ids", "attention_mask", "labels"]
+    train_dataset.set_format(type="torch", columns=cols)
+    dev_dataset.set_format(type="torch", columns=cols)
+
+    return train_dataset, dev_dataset, tokenizer
 
 
 def compute_metrics(eval_pred):
@@ -48,7 +62,7 @@ def compute_metrics(eval_pred):
     return {"macro-F1": macro_f1}
 
 
-class BERTRunner:
+class mBERTRunner:
     def prepare_features(self, 
         hyper_params: Dict[str, Any], 
         exp_config: Dict[str, Any], 
@@ -58,12 +72,12 @@ class BERTRunner:
         """Fit a featurizer on train text and transform train/test into feature matrices"""
         
         set_seeds(exp_config['seed'])
-        train_dataset, dev_dataset = tokenize_input(hyper_params, train_df, test_df)
+        train_dataset, dev_dataset, tokenizer = tokenize_input(hyper_params, train_df, test_df)
         
-        return train_dataset, dev_dataset
+        return train_dataset, dev_dataset, tokenizer
 
     
-    def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> PreTrainedModel:
+    def initialize(self, params: Dict[str, Any], seed: int=51, model_family: str="mBERT") -> PreTrainedModel:
         
         model = AutoModelForSequenceClassification.from_pretrained(
                     params.get("model_identifier"),
@@ -92,22 +106,22 @@ class BERTRunner:
         best_tokenizer = None
 
         tok_space = {
-            "max_length": [64, 128, 256],
+            "max_length": [256],
         }
         tok_grid = list(ParameterGrid(tok_space))
 
 
         learning_space = {
-            "learning_rate": [5e-5, 2e-5],
-            "num_train_epochs": [3, 5],
-            "weight_decay": [0.0, 0.01],
+            "learning_rate": [2e-5],
+            "num_train_epochs": [5],
+            "weight_decay": [0.01],
         }
         learning_grid = list(ParameterGrid(learning_space))
         MODEL_ID = "bert-base-multilingual-cased"
 
         # Run through hyperparameter grid
         for tokenization_config in tok_grid:
-            train_data, dev_data, tokenizer = self.prepare_features(params=tokenization_config, config=exp_config, train_df=train_df, test_df=dev_df)
+            train_data, dev_data, tokenizer = self.prepare_features(hyper_params=tokenization_config, exp_config=exp_config, train_df=train_df, test_df=dev_df)
 
             for learning_config in learning_grid:
                 set_seeds(exp_config['seed'])
@@ -134,7 +148,7 @@ class BERTRunner:
                     weight_decay=learning_config["weight_decay"],
 
                     # Evaluation & saving
-                    evaluation_strategy="epoch",
+                    eval_strategy="epoch",
                     save_strategy="epoch",
                     save_total_limit=2,
                     load_best_model_at_end=True,
@@ -152,7 +166,6 @@ class BERTRunner:
                     args=training_args,                 
                     train_dataset=train_data,
                     eval_dataset=dev_data,
-                    tokenizer=tokenizer,
                     compute_metrics=compute_metrics
                 )
 
@@ -195,7 +208,7 @@ class BERTRunner:
 
         best_model_dir = Path(model_path / f"{exp_config['model_family']}")
         best_model_dir.mkdir(parents=True, exist_ok=True)
-        best_model.save_pretrained(best_model_dir)
+        best_model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
 
         return best_model, results, best_params, best_curves
