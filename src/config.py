@@ -2,6 +2,7 @@ from pathlib import Path
 import torch
 import os
 from dataclasses import dataclass
+import nltk
 
 @dataclass(frozen=True)
 class Paths:
@@ -12,6 +13,8 @@ class Paths:
     runs: Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # repo root (…/BeyondLiteral_Idiomaticity_Detection)
+nltk.data.path.append(str(PROJECT_ROOT / ".nltk_data")) ## !TODO: DELETE LATER
+
 IN_DOCKER = os.getenv("IN_DOCKER", "0") == "1"
 
 if IN_DOCKER:
