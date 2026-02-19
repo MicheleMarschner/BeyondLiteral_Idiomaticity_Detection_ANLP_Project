@@ -22,7 +22,7 @@ def build_test_predictions(
             "test_pred": int(preds),
             "test_proba": float(proba)
         }
-        for id, y, preds, proba, mwes in zip(ids, gold_labels, preds, proba)
+        for id, y, preds, proba in zip(ids, gold_labels, preds, proba)
     ]
     return rows
 

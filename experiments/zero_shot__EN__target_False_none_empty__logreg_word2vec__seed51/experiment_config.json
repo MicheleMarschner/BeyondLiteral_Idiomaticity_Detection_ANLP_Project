@@ -1,0 +1,13 @@
+{
+  "input_variant": {
+    "context": "target",
+    "features": [],
+    "include_mwe_segment": false,
+    "transform": "none"
+  },
+  "language": "EN",
+  "language_mode": "per_language",
+  "model_family": "logreg_word2vec",
+  "seed": 51,
+  "setting": "zero_shot"
+}

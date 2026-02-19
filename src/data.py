@@ -9,6 +9,18 @@ from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CL
 # ! TODO: finish function to build input variants
 def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
     """Create the model input text for this config and store it in the `Input` column"""
+    
+    ## Baseline, according to keyword: target, prev_target_next, prev_target, target_next
+    ## split at _ and in an array cycle over columns and pick (lowercase cols)
+
+    ## Extra Segment: if include_mwe_segment then add MWE via
+
+    ## Transform: mask/highlight -> lookup MWE in text and wrap or delete and instead
+
+    ## features: loop through array and call function according to
+
+
+    
     df = df.copy()
     df['Input'] = df['Target'].astype(str)
     return df
