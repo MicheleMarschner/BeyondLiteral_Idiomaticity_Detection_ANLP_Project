@@ -2,17 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System deps (minimal)
+# System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file and install Python libraries
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy project metadata first (better layer caching)
+# Copy project metadata first
 COPY pyproject.toml README.md /app/    
+
 # Copy source code
 COPY src /app/src
 

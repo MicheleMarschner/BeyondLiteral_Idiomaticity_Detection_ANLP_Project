@@ -24,7 +24,6 @@ def create_overview_per_experiment_config(selected_config: Dict[str, Any], exper
     setting = selected_config.get('setting')
     language = selected_config.get('language')
     input_variant = selected_config.get('input_variant')
-    
 
     rows = []
 
@@ -165,8 +164,9 @@ def create_overview_per_model(
     df.to_csv(out_path, index=False)
 
     
-
 def run_evaluation(paths: Paths=PATHS, model_family=None, experiment_config=None):
+    """Aggregates and saves results in an evaluation overview table"""
+    
     if model_family is not None:
         create_overview_per_model(model_family, paths.runs, paths.results)
     

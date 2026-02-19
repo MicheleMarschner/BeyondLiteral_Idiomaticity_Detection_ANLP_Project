@@ -184,3 +184,18 @@ def get_ids_by_pair(
     keys = types_df[[col1, col2]].drop_duplicates()
     matched = df.merge(keys, on=[col1, col2], how="inner")
     return matched[id_col].tolist()
+
+
+def copy_file(src_file: Path, dst_file: Path, overwrite: bool = False) -> Path:
+    """Copy a dataset file to an analysis location"""
+
+    if not src_file.exists():
+        raise FileNotFoundError(f"Source file not found: {src_file}")
+
+    ensure_dir(dst_file)
+
+    if dst_file.exists():
+        raise 
+
+    shutil.copy2(src_file, dst_file)  # copy2 keeps timestamps/metadata
+    return dst_file

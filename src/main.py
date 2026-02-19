@@ -33,11 +33,10 @@ def main() -> None:
     '''
 
     if args.action == "analyse":
-        if not args.split or not args.setting:
-            parser.error("analyse requires --split and --setting. Example: analyse <arg1> --split test --setting zero_shot")
+        if args.split is None or args.setting is None:
+            parser.error("analyse requires --split and --setting. Example: analyse --split test --setting zero_shot")
         
-        path = args.arg1 or PATHS.data_preprocessed
-        run_analysis(path=path, setting=args.setting, split_type=args.split)
+        run_analysis(setting=args.setting, split_type=args.split, paths=PATHS)
 
     
     

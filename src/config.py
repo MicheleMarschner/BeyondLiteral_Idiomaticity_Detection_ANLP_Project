@@ -8,6 +8,7 @@ class Paths:
     """Holds the main filesystem paths used by the project"""
     data_raw: Path
     data_preprocessed: Path
+    data_analysis: Path
     results: Path
     runs: Path
 
@@ -18,6 +19,7 @@ if IN_DOCKER:
     PATHS = Paths(
         data_raw=Path("/data/raw"),
         data_preprocessed=Path("/data/preprocessed"),
+        data_analysis=Path("/data/analysis"),
         results=Path("/results"),
         runs=Path("/experiments"),
     )
@@ -25,6 +27,7 @@ else:
     PATHS = Paths(
         data_raw=PROJECT_ROOT / "data" / "raw",
         data_preprocessed=PROJECT_ROOT / "data" / "preprocessed",
+        data_analysis=PROJECT_ROOT / "data" / "analysis",
         results=PROJECT_ROOT / "results",
         runs=PROJECT_ROOT / "experiments",
     )
