@@ -9,6 +9,7 @@ from sklearn.metrics import f1_score
 from datasets import Dataset
 
 from utils.helper import set_seeds
+from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
 
 
 def tokenize_function(examples, tokenizer, max_length: int):
@@ -25,9 +26,7 @@ def tokenize_input(params, train_data, dev_data):
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
 
-    MODEL_NAME = "bert-base-multilingual-cased"
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
+    tokenizer = AutoTokenizer.from_pretrained(params["model_identifier"])
     max_length = int(params["max_length"])
 
     train_dataset = train_dataset.map(
@@ -62,7 +61,7 @@ def compute_metrics(eval_pred):
     return {"macro-F1": macro_f1}
 
 
-class mBERTRunner:
+class BERTRunner:
     def prepare_features(self, 
         params: Dict[str, Any], 
         exp_config: Dict[str, Any], 
@@ -105,27 +104,30 @@ class mBERTRunner:
         best_params = None
         best_tokenizer = None
 
-        tok_space = {
-            "max_length": [256],
-        }
-        tok_grid = list(ParameterGrid(tok_space))
+        model_family = exp_config["model_family"]
+        if model_family == "mBERT": 
+            model_id = "bert-base-multilingual-cased"
+            param_grid = mBERT_grid
+        elif model_family == "modernBERT": 
+            model_id = "answerdotai/ModernBERT-large"
+            param_grid = modernBERT_grid
+        else:
+            raise ValueError(f"Unknown model_family: {model_family}")
 
-
-        learning_space = {
-            "learning_rate": [2e-5],
-            "num_train_epochs": [5],
-            "weight_decay": [0.01],
-        }
-        learning_grid = list(ParameterGrid(learning_space))
-        MODEL_ID = "bert-base-multilingual-cased"
+        tok_grid = list(ParameterGrid(param_grid["tok_space"]))
+        learning_grid = list(ParameterGrid(param_grid["learning_space"]))
 
         # Run through hyperparameter grid
         for tokenization_config in tok_grid:
-            train_data, dev_data, tokenizer = self.prepare_features(params=tokenization_config, exp_config=exp_config, train_df=train_df, test_df=dev_df)
+            train_data, dev_data, tokenizer = self.prepare_features(
+                params={**tokenization_config, "model_identifier": model_id}, 
+                exp_config=exp_config, 
+                train_df=train_df, 
+                test_df=dev_df)
 
             for learning_config in learning_grid:
                 set_seeds(exp_config['seed'])
-                model = self.initialize(params={**learning_config, "model_identifier": MODEL_ID})
+                model = self.initialize(params={**learning_config, "model_identifier": model_id})
                 
                 run_name = (
                     f"ml{tokenization_config['max_length']}"
@@ -205,7 +207,6 @@ class mBERTRunner:
         if best_model is None:
             raise RuntimeError("Tuning failed: no devid parameter combination produced a trained model.")
                 
-
         best_model_dir = Path(model_path / f"{exp_config['model_family']}")
         best_model_dir.mkdir(parents=True, exist_ok=True)
         best_model.save_pretrained(best_model_dir, safe_serialization=True)
