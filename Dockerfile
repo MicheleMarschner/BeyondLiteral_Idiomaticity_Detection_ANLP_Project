@@ -22,6 +22,10 @@ COPY src /app/src
 # Installs project’s dependencies
 RUN pip install --no-cache-dir -e .
 
+# NLTK data
+ENV NLTK_DATA=/usr/local/share/nltk_data
+RUN python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
+
 RUN mkdir -p /app/experiments /app/results
 
 # If using HuggingFace:
