@@ -88,7 +88,7 @@ class BERTRunner:
     
     
     def tune(self, 
-        exp_config: Dict[str, Any],
+        config: Dict[str, Any],
         model_path: Path,
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
@@ -104,7 +104,7 @@ class BERTRunner:
         best_params = None
         best_tokenizer = None
 
-        model_family = exp_config["model_family"]
+        model_family = config["model_family"]
         if model_family == "mBERT": 
             model_id = "bert-base-multilingual-cased"
             param_grid = mBERT_grid
@@ -121,12 +121,12 @@ class BERTRunner:
         for tokenization_config in tok_grid:
             train_data, dev_data, tokenizer = self.prepare_features(
                 params={**tokenization_config, "model_identifier": model_id}, 
-                exp_config=exp_config, 
+                config=config, 
                 train_df=train_df, 
                 test_df=dev_df)
 
             for learning_config in learning_grid:
-                set_seeds(exp_config['seed'])
+                set_seeds(config['seed'])
                 model = self.initialize(params={**learning_config, "model_identifier": model_id})
                 
                 run_name = (
@@ -134,7 +134,7 @@ class BERTRunner:
                     f"__lr{learning_config['learning_rate']}"
                     f"__ep{learning_config['num_train_epochs']}"
                     f"__wd{learning_config.get('weight_decay', 0.0)}"
-                    f"__seed{exp_config['seed']}"
+                    f"__seed{config['seed']}"
                 )
                 run_dir = out_dir / run_name
                 run_dir.mkdir(parents=True, exist_ok=True)
@@ -157,7 +157,7 @@ class BERTRunner:
                     metric_for_best_model="macro-F1",
 
                     # Reproducibility
-                    seed=exp_config['seed'],
+                    seed=config['seed'],
                     logging_dir=str(run_dir / "logs"),
                     logging_steps=50,
                     report_to=["none"]
@@ -207,7 +207,7 @@ class BERTRunner:
         if best_model is None:
             raise RuntimeError("Tuning failed: no devid parameter combination produced a trained model.")
                 
-        best_model_dir = Path(model_path / f"{exp_config['model_family']}")
+        best_model_dir = Path(model_path / f"{config['model_family']}")
         best_model_dir.mkdir(parents=True, exist_ok=True)
         best_model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
