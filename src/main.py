@@ -1,8 +1,9 @@
 import argparse
 from pathlib import Path
 
+#from experiments.run_experiments import run_experiments
+#from analysis.run_analysis import run_analysis
 from experiments.run_experiments import run_experiments
-from analysis.run_analysis import run_analysis
 from config import PATHS
 
 
@@ -30,7 +31,7 @@ def main() -> None:
             raise SystemExit("evaluation requires arg1 = experiment_id")
         
     #    return
-    '''
+    
 
     if args.action == "analyse":
         if not args.split or not args.setting:
@@ -38,7 +39,7 @@ def main() -> None:
         
         path = args.arg1 or PATHS.data_preprocessed
         run_analysis(path=path, setting=args.setting, split_type=args.split)
-
+    '''
     
     
 if __name__ == "__main__":
