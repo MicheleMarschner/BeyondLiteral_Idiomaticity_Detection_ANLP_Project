@@ -21,14 +21,14 @@ def tokenize_function(examples, tokenizer, max_length: int):
     )
 
 
-def tokenize_input(hyper_params, train_data, dev_data):
+def tokenize_input(params, train_data, dev_data):
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
 
     MODEL_NAME = "bert-base-multilingual-cased"
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-    max_length = int(hyper_params["max_length"])
+    max_length = int(params["max_length"])
 
     train_dataset = train_dataset.map(
         tokenize_function,
@@ -64,7 +64,7 @@ def compute_metrics(eval_pred):
 
 class mBERTRunner:
     def prepare_features(self, 
-        hyper_params: Dict[str, Any], 
+        params: Dict[str, Any], 
         exp_config: Dict[str, Any], 
         train_df: pd.DataFrame,
         test_df: pd.DataFrame
@@ -72,7 +72,7 @@ class mBERTRunner:
         """Fit a featurizer on train text and transform train/test into feature matrices"""
         
         set_seeds(exp_config['seed'])
-        train_dataset, dev_dataset, tokenizer = tokenize_input(hyper_params, train_df, test_df)
+        train_dataset, dev_dataset, tokenizer = tokenize_input(params, train_df, test_df)
         
         return train_dataset, dev_dataset, tokenizer
 
@@ -121,7 +121,7 @@ class mBERTRunner:
 
         # Run through hyperparameter grid
         for tokenization_config in tok_grid:
-            train_data, dev_data, tokenizer = self.prepare_features(hyper_params=tokenization_config, exp_config=exp_config, train_df=train_df, test_df=dev_df)
+            train_data, dev_data, tokenizer = self.prepare_features(params=tokenization_config, exp_config=exp_config, train_df=train_df, test_df=dev_df)
 
             for learning_config in learning_grid:
                 set_seeds(exp_config['seed'])
