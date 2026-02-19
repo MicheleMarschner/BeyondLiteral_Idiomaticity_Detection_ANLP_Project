@@ -20,9 +20,8 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
     ## features: loop through array and call function according to
 
 
-    
     df = df.copy()
-    df['Input'] = df['Target'].astype(str)
+    df['text'] = df['Target'].astype(str)
     return df
 
 
