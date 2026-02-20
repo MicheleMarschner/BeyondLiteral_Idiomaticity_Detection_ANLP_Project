@@ -1,15 +1,18 @@
 import pandas as pd
+import re
 from typing import Tuple, Dict, Any
 from pathlib import Path
 
 from utils.helper import read_csv_data
 from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_DEV, MIN_PER_CLASS_TEST
 
+#  import functions required for building the input variant
+from src.input.ner import apply_ner_batch
+from src.input.glosses import get_glosses
 
-# ! TODO: finish function to build input variants
+
 def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
     """Create the model input text for this config and store it in the `Input` column"""
-    
     ## Baseline, according to keyword: target, prev_target_next, prev_target, target_next
     ## split at _ and in an array cycle over columns and pick (lowercase cols)
 
@@ -19,9 +22,85 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 
     ## features: loop through array and call function according to
 
-
     df = df.copy()
-    df['text'] = df['Target'].astype(str)
+    
+    # get the input variant configuration for the chosen setting
+    input_variant = config["input_variant"]
+
+    context = input_variant["context"]
+    include_mwe = input_variant["include_mwe_segment"]
+    transform = input_variant["transform"]
+    features = input_variant["features"]
+
+    texts = []
+    languages = []
+
+    for _, row in df.iterrows():
+
+        target = str(row["Target"])
+        mwe = str(row["MWE"])
+
+        pattern = re.compile(
+            r'(?<!\w)' + re.escape(mwe) + r'(?!\w)',
+            re.IGNORECASE
+        )
+
+        if transform == "mask":
+            target = pattern.sub("[MASK]", target)
+
+        elif transform == "highlight":
+            target = pattern.sub(f"<MWE> {mwe} </MWE>", target)
+
+        # build the input text based on the context configuration
+        if context == "target":
+            parts = [target]
+
+        elif context == "previous_target":
+            parts = [row["Previous"], target]
+
+        elif context == "target_next":
+            parts = [target, row["Next"]]
+
+        elif context == "previous_target_next":
+            parts = [row["Previous"], target, row["Next"]]
+
+        parts = [str(p) for p in parts if pd.notna(p)]
+        text = " [SEP] ".join(parts)
+        text = f"[CLS] {text} [SEP]"
+
+        # include mwe segment at the beginning of the text if configured to do so
+        if include_mwe:
+            text_body = text[len("[CLS] "):]
+            text = f"[CLS] [SEP] {mwe} [SEP] {text_body}"
+
+        texts.append(text)
+        languages.append(row["Language"])
+
+    # if feature = ner, apply the ner function in a batch to all texts and languages
+    if "ner" in features:
+        texts = apply_ner_batch(texts, languages)
+
+    # if feature = glosses, get the glosses for each word in the MWE and append them to the text
+    if "glosses" in features:
+
+        updated_texts = []
+
+        for i, row in df.iterrows():
+
+            words = str(row["MWE"]).split()
+            gloss_parts = [row["MWE"] + "."]
+
+            for word in words:
+                gloss_parts.extend(get_glosses(word, row["Language"]))
+
+            gloss_segment = " ".join(gloss_parts)
+
+            updated_texts.append(f"{texts[i]} {gloss_segment} [SEP]")
+
+        texts = updated_texts
+    # return only the updated text column
+    df["text"] = texts
+
     return df
 
 
