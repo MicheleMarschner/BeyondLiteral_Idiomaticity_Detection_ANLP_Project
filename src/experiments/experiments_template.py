@@ -29,8 +29,8 @@ EXPERIMENTS = ExperimentTemplate(
     language_mode="per_language",
     languages=["EN"],
     input_variant=[
-        {"context": "target", "include_mwe_segment": False, "transform": "none", "features": []},
+        {"context": "target_next", "include_mwe_segment": True, "transform": "mask", "features": ["glosses"]},
     ],
-    model_families=["modernBERT"],
+    model_families=["logreg_tfidf", "logreg_word2vec"],
     seeds=[51]
 )

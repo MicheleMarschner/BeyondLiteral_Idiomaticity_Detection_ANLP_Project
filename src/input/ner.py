@@ -1,6 +1,6 @@
 import torch
 from transformers import pipeline
-from src.input.ner import ner_models
+
 
 # load NER models for each language, using GPU if available
 device = 0 if torch.cuda.is_available() else -1

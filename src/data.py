@@ -7,8 +7,8 @@ from utils.helper import read_csv_data
 from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_DEV, MIN_PER_CLASS_TEST
 
 #  import functions required for building the input variant
-from src.input.ner import apply_ner_batch
-from src.input.glosses import get_glosses
+from input.ner import apply_ner_batch
+from input.glosses import get_glosses
 
 
 def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
@@ -84,23 +84,21 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
     if "glosses" in features:
 
         updated_texts = []
-
-        for i, row in df.iterrows():
-
+        for i in range(len(df)):
+            row = df.iloc[i]
             words = str(row["MWE"]).split()
             gloss_parts = [row["MWE"] + "."]
 
             for word in words:
                 gloss_parts.extend(get_glosses(word, row["Language"]))
-
             gloss_segment = " ".join(gloss_parts)
-
             updated_texts.append(f"{texts[i]} {gloss_segment} [SEP]")
-
+        
         texts = updated_texts
-    # return only the updated text column
-    df["text"] = texts
 
+    # input column is used in train/test df, so return the upated_texts list as the input column in the df, 
+    # rest of the columns remain unchanged
+    df["input"] = texts 
     return df
 
 
@@ -139,7 +137,7 @@ def build_inputs_for_splits(
     return train_data, dev_data, test_data
 
 
-def _label_counts(df: pd.DataFrame, label_col: str = "Label") -> dict[int, int]:
+def _label_counts(df: pd.DataFrame, label_col: str = "label") -> dict[int, int]: # changed label_col default to "label" according to the data files, was "Label" before
     """Return label frequencies as dict"""
 
     vc = df[label_col].value_counts().to_dict()
@@ -151,7 +149,7 @@ def compute_and_check_split_stats(
     dev_df: pd.DataFrame,
     test_df: pd.DataFrame,
     language: str,
-    label_col: str = "Label",
+    label_col: str = "label",  # changed label_col default to "label" according to the data files, was "Label" before
 ) -> Tuple[dict[str, dict], bool, list[str]]:
     """Summarize split sizes and per-split label counts and checks if sample size is enough to run the experiment"""
 

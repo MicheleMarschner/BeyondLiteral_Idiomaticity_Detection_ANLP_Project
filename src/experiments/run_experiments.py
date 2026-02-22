@@ -77,9 +77,9 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     test_proba = runner.predict_proba(model, test_loader)
     test_preds = make_predictions(test_proba)
 
-    test_predictions = build_test_predictions(test_data['ID'], test_preds, test_data['Label'], test_proba)
+    test_predictions = build_test_predictions(test_data['ID'], test_preds, test_data['label'], test_proba)
 
-    metrics = compute_metrics(test_data['Label'], test_preds)
+    metrics = compute_metrics(test_data['label'], test_preds) # changed label_col default to "label" according to the data files, was "Label" before
 
     save_artifacts(
         run_dir=experiment_dir,
