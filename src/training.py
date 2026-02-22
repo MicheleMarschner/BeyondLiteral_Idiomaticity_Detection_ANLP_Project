@@ -2,14 +2,22 @@ import torch
 from torch import nn
 from pathlib import Path
 import joblib
+from transformers import AutoModelForSequenceClassification, Trainer
 
 import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
+
 from config import DEVICE
 from utils.helper import ensure_dir, write_json, read_json
 
+
+
+'''
 def load_model_checkpoint(model: Union[nn.Module, Any], model_path: Path, device=DEVICE) -> Union[nn.Module, Any]:
+    THE FUNCTION IS CURRENTLY UNUSED AS WE NO LONGER USE CUSTOM .pth CHECKPOINTS FOR OUR MODELS.
+    HuggingFace Transformers are saved using `save_pretrained()` and are loaded via `from_pretrained()` instead.
+
     """Load a saved model, freeze parameters and set it to inference mode"""
 
     if model_path.suffix == ".joblib":
@@ -29,7 +37,7 @@ def load_model_checkpoint(model: Union[nn.Module, Any], model_path: Path, device
         return model
     
     raise ValueError(f"Unsupported checkpoint type: {model_path.suffix}")
-
+'''
 
 def get_model(
     experiment_config: Dict[str, Any], 
@@ -43,13 +51,16 @@ def get_model(
     best model for this config
     """
     model_family = experiment_config['model_family']
-    ext = ".joblib" if model_family.startswith("logreg") else ".pth"
-
-    ## check model according to experiment config name
-    model_path = Path(f"{experiment_dir}/{model_family}{ext}")
+    if model_family.startswith("logreg"):
+        # sklearn models are saved as single .joblib files
+        model_path = experiment_dir / f"{model_family}.joblib"
+    else:
+        # HuggingFace models are saved as directories via save_pretrained()
+        model_path = experiment_dir / model_family
 
     # Check for existing artifacts
     if not model_path.exists():
+        print("Model not found. Training...")
         
         # Trigger full training pipeline
         model, tuning_results, best_params, best_curves = runner.tune(experiment_config, model_path, train_data, val_data)
@@ -62,12 +73,17 @@ def get_model(
         write_json(experiment_dir / "learning_curves.json", best_curves)
 
     else:    # Re-instantiate a clean model architecture and load the best weights (Frozen state)
-        print("Load model...")
+        print("Loading existing model...")
 
         best_params = read_json(experiment_dir / "best_params.json")
 
-        model = runner.initialize(best_params, experiment_config['seed'], experiment_config['model_family'])
-        model = load_model_checkpoint(model, model_path)
-
+        if model_family.startswith("logreg"):
+            # load sklearn model
+            model = joblib.load(model_path)
+        else:
+            # load HuggingFace model directory
+            model = AutoModelForSequenceClassification.from_pretrained(model_path)
+            model.eval()
+    
     return model, best_params
     
