@@ -15,7 +15,7 @@ from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
 def tokenize_function(examples, tokenizer, max_length: int):
     """Tokenize text with padding and truncation."""
     return tokenizer(
-        examples["text"],
+        examples["input"],
         padding="max_length",
         truncation=True,
         max_length=max_length,
@@ -40,18 +40,11 @@ def tokenize_input(params, train_data, dev_data):
         fn_kwargs={"tokenizer": tokenizer, "max_length": max_length},
     )
 
-    # rename Label -> labels (as HF expects 'labels' -> we should do that already before when creating the data)
-    if "Label" in train_dataset.column_names:
-        train_dataset = train_dataset.rename_column("Label", "labels")
-    if "Label" in dev_dataset.column_names:
-        dev_dataset = dev_dataset.rename_column("Label", "labels")
-
     cols = ["input_ids", "attention_mask", "labels"]
     train_dataset.set_format(type="torch", columns=cols)
     dev_dataset.set_format(type="torch", columns=cols)
 
     return train_dataset, dev_dataset, tokenizer
-
 
 def compute_metrics(eval_pred):
     """Calculate Macro F1 score (average of F1 for each class)"""
@@ -59,7 +52,6 @@ def compute_metrics(eval_pred):
     predictions = predictions.argmax(axis=-1)
     macro_f1 = f1_score(labels, predictions, average="macro")
     return {"macro-F1": macro_f1}
-
 
 class BERTRunner:
     def prepare_features(self, 
@@ -93,7 +85,7 @@ class BERTRunner:
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
         threshold: float=0.5
-    ) -> Tuple[PreTrainedModel, List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
+    ) -> Tuple[Trainer, List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
         
         out_dir = model_path / "training"
@@ -142,10 +134,10 @@ class BERTRunner:
                 training_args = TrainingArguments(
                     output_dir=str(run_dir),
 
-                    # Hyperparameters (Baseline replication hence fixed)
+                    # Hyperparameters
                     learning_rate=learning_config["learning_rate"],
-                    per_device_train_batch_size=32,
-                    per_device_eval_batch_size=32,
+                    per_device_train_batch_size= learning_config["batch_size"],
+                    per_device_eval_batch_size= learning_config["batch_size"],
                     num_train_epochs=learning_config["num_train_epochs"],
                     weight_decay=learning_config["weight_decay"],
 
@@ -199,26 +191,26 @@ class BERTRunner:
 
                 if best_dev_f1 > best_f1:
                     best_f1 = best_dev_f1
-                    best_model = trainer.model
+                    best_model = trainer
                     best_params = {**tokenization_config, **learning_config}
                     best_tokenizer = tokenizer
                     best_curves = loss_curves
                 
         if best_model is None:
-            raise RuntimeError("Tuning failed: no devid parameter combination produced a trained model.")
+            raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
                 
         best_model_dir = Path(model_path / f"{config['model_family']}")
         best_model_dir.mkdir(parents=True, exist_ok=True)
-        best_model.save_pretrained(best_model_dir, safe_serialization=True)
+        best_model.model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
 
         return best_model, results, best_params, best_curves
 
 
-    def predict_proba(self, model, X: Any) -> np.ndarray:
+    def predict_proba(self, trainer, X: Any) -> np.ndarray:
         """Wrapper to get positive-class probabilities from a model"""
         
-        out = model.predict(X)
+        out = trainer.predict(X)
         logits = out.predictions  
 
         # softmax -> probabilities

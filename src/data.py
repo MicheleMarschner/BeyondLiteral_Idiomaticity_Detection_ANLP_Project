@@ -6,7 +6,7 @@ from pathlib import Path
 from utils.helper import read_csv_data
 from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_DEV, MIN_PER_CLASS_TEST
 
-#  import functions required for building the input variant
+# import functions required for building the input variant
 from input.ner import apply_ner_batch
 from input.glosses import get_glosses
 
@@ -66,13 +66,11 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 
         parts = [str(p) for p in parts if pd.notna(p)]
         text = " [SEP] ".join(parts)
-        text = f"[CLS] {text} [SEP]"
 
         # include mwe segment at the beginning of the text if configured to do so
         if include_mwe:
-            text_body = text[len("[CLS] "):]
-            text = f"[CLS] [SEP] {mwe} [SEP] {text_body}"
-
+            text = f"{mwe} [SEP] {text}"
+            
         texts.append(text)
         languages.append(row["Language"])
 
