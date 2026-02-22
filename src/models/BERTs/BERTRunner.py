@@ -40,6 +40,12 @@ def tokenize_input(params, train_data, dev_data):
         fn_kwargs={"tokenizer": tokenizer, "max_length": max_length},
     )
 
+    # rename label --> labels (HF expects this)
+    if "label" in train_dataset.column_names:
+        train_dataset = train_dataset.rename_column("label", "labels")
+    if "label" in dev_dataset.column_names:
+        dev_dataset = dev_dataset.rename_column("label", "labels")
+
     cols = ["input_ids", "attention_mask", "labels"]
     train_dataset.set_format(type="torch", columns=cols)
     dev_dataset.set_format(type="torch", columns=cols)
@@ -52,6 +58,7 @@ def compute_metrics(eval_pred):
     predictions = predictions.argmax(axis=-1)
     macro_f1 = f1_score(labels, predictions, average="macro")
     return {"macro-F1": macro_f1}
+
 
 class BERTRunner:
     def prepare_features(self, 
@@ -192,16 +199,15 @@ class BERTRunner:
                 if best_dev_f1 > best_f1:
                     best_f1 = best_dev_f1
                     best_model = trainer
-                    best_params = {**tokenization_config, **learning_config}
+                    best_params = {**tokenization_config, **learning_config, "model_identifier": model_id} # add model identifier, required during evaluation.
                     best_tokenizer = tokenizer
                     best_curves = loss_curves
                 
         if best_model is None:
             raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
                 
-        best_model_dir = Path(model_path / f"{config['model_family']}")
-        best_model_dir.mkdir(parents=True, exist_ok=True)
-        best_model.model.save_pretrained(best_model_dir, safe_serialization=True)
+        best_model_dir = model_path
+        best_model.model.save_pretrained(best_model_dir)
         best_tokenizer.save_pretrained(best_model_dir)
 
         return best_model, results, best_params, best_curves
