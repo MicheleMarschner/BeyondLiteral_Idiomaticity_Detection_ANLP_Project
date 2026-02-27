@@ -56,20 +56,19 @@ No suspicious Unicode characters
 ## Overlap Analysis
 
 Before splitting, we verified:
+     - No sample-level overlap between:
 
-- No sample-level overlap between:
+          * zero-shot train and dev
 
-- zero-shot train and dev
+          * one-shot train and dev
 
-- one-shot train and dev
+          * zero-shot train and one-shot train
 
-- zero-shot train and one-shot train
+     -MWE-level overlap analysis revealed:
 
-MWE-level overlap analysis revealed:
+          * Dev MWEs fully overlap with one-shot (non-Galician) training MWEs
 
-- Dev MWEs fully overlap with one-shot (non-Galician) training MWEs
-
-- No overlap between zero-shot training and dev MWEs
+          * No overlap between zero-shot training and dev MWEs
 
 
 ## Dataset Statistics (Full Merged Data)
