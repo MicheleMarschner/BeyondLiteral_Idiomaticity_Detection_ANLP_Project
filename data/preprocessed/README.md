@@ -89,7 +89,7 @@ GL: 63 samples
 
 # Zero_shot setting Splitting Strategy:
 
-##Create train/dev/test splits:
+## Create train/dev/test splits:
 
 - 50 unique MWEs → Dev
 
@@ -147,11 +147,11 @@ For each MWE in dev/test:
 
 - Replacement must:
 
-     * Match language
+     - Match language
 
-     * Match label
+     - Match label
 
-     * Come from an MWE that appears exactly the same number of times in train
+     - Come from an MWE that appears exactly the same number of times in train
 
 This ensures:
 
