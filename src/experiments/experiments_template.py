@@ -25,12 +25,12 @@ EXPERIMENTS = ExperimentTemplate(
 
 '''
 EXPERIMENTS = ExperimentTemplate(
-    settings=["zero_shot"],
+    settings=["zero_shot", "one_shot"],
     language_mode="per_language",
     languages=["EN"],
     input_variant=[
-        {"context": "target_next", "include_mwe_segment": True, "transform": "mask", "features": ["glosses"]},
+        {"context": "prev_target_next", "include_mwe_segment": True, "transform": "none", "features": []}
     ],
-    model_families=["logreg_tfidf"],
+    model_families=["modernBERT"],
     seeds=[51]
 )
