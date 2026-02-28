@@ -1,12 +1,12 @@
-
-from typing import Dict, Tuple, Any, List
 import numpy as np
-from sklearn.model_selection import ParameterGrid
 from pathlib import Path
 import pandas as pd
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel, Trainer, TrainingArguments)
-from sklearn.metrics import f1_score
 from datasets import Dataset
+from sklearn.model_selection import ParameterGrid
+from sklearn.metrics import f1_score
+
+from typing import Dict, Tuple, Any, List
 
 from utils.helper import set_seeds
 from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
@@ -122,7 +122,8 @@ class BERTRunner:
                 params={**tokenization_config, "model_identifier": model_id}, 
                 config=config, 
                 train_df=train_df, 
-                test_df=dev_df)
+                test_df=dev_df
+            )
 
             for learning_config in learning_grid:
                 set_seeds(config['seed'])

@@ -31,6 +31,6 @@ EXPERIMENTS = ExperimentTemplate(
     input_variant=[
         {"context": "target_next", "include_mwe_segment": True, "transform": "mask", "features": ["glosses"]},
     ],
-    model_families=["logreg_tfidf", "logreg_word2vec"],
+    model_families=["logreg_tfidf"],
     seeds=[51]
 )
