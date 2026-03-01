@@ -2,6 +2,8 @@ from pathlib import Path
 import torch
 import os
 from dataclasses import dataclass
+import nltk
+
 
 def is_colab() -> bool:
     return "COLAB_GPU" in os.environ or "COLAB_TPU_ADDR" in os.environ
@@ -27,6 +29,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]  # repo root (…/BeyondLiter
 IN_COLAB = is_colab()
 IN_KAGGLE = is_kaggle()
 IN_DOCKER = os.getenv("IN_DOCKER", "0") == "1"
+
 
 if IN_DOCKER:
     PATHS = Paths(
@@ -60,6 +63,9 @@ else:
         checkpoints=PROJECT_ROOT / "checkpoints"
     )
 
+
+NLTK_DATA_DIR = PROJECT_ROOT / ".nltk_data"
+nltk.data.path.insert(0, str(NLTK_DATA_DIR))
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

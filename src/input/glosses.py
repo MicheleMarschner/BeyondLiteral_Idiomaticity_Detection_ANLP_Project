@@ -1,9 +1,8 @@
-import nltk
 from nltk.corpus import wordnet as wn
 from typing import List
 
-nltk.download('wordnet')
-nltk.download('omw-1.4')
+#nltk.download('wordnet')
+#nltk.download('omw-1.4')
 
 # print(wn.langs())
 

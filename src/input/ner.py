@@ -1,28 +1,29 @@
 import torch
 from transformers import pipeline
 
+from config import DEVICE
+
 
 # load NER models for each language, using GPU if available
-device = 0 if torch.cuda.is_available() else -1
 
 ner_models = {
     "EN": pipeline(
         "ner",
         model="Babelscape/wikineural-multilingual-ner",
         aggregation_strategy="max",
-        device=device,
+        device=DEVICE,
     ),
     "PT": pipeline(
         "ner",
         model="Babelscape/wikineural-multilingual-ner",
         aggregation_strategy="max",
-        device=device,
+        device=DEVICE,
     ),
     "GL": pipeline(
         "ner",
         model="marcosgg/bert-base-gl-SLI-NER",
         aggregation_strategy="max",
-        device=device,
+        device=DEVICE,
     ),
 }
 
