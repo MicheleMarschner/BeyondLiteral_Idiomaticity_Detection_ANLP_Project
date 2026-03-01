@@ -154,7 +154,6 @@ class BERTRunner:
                     save_strategy="epoch",
                     save_total_limit=1,
                     save_only_model=True,      # avoids optimizer.pt/scheduler.pt
-                    save_total_limit=1,
                     load_best_model_at_end=True,
                     metric_for_best_model="macro-F1",
                     greater_is_better=True,
