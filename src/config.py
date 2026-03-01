@@ -10,7 +10,7 @@ def is_colab() -> bool:
 
 
 def is_kaggle() -> bool:
-    if Path("/kaggle/input").exists():
+    if os.getenv("KAGGLE_KERNEL_RUN_TYPE"):
         return True
     return False
 
@@ -27,7 +27,7 @@ class Paths:
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # repo root (…/BeyondLiteral_Idiomaticity_Detection)
 IN_COLAB = is_colab()
-IN_KAGGLE = is_kaggle()
+IN_KAGGLE = (not IN_COLAB) and is_kaggle()
 IN_DOCKER = os.getenv("IN_DOCKER", "0") == "1"
 
 
