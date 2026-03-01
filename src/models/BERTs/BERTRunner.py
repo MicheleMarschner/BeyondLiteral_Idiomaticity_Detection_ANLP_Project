@@ -94,6 +94,8 @@ class BERTRunner:
         threshold: float=0.5
     ) -> Tuple[Trainer, List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
+
+        print("[DEBUG] model_path: ", model_path)
         
         out_dir = model_path / "training"
         results = []
@@ -211,6 +213,7 @@ class BERTRunner:
             raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
                 
         best_model_dir = model_path
+        print("[DEBUG]", best_model_dir)
         best_model.model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
 
