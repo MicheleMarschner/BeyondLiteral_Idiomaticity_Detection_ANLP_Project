@@ -55,6 +55,11 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
 
         elif context == "previous_target_next":
             parts = [row["Previous"], target, row["Next"]]
+        else:
+            raise ValueError(
+                f"Unknown input_variant.context='{context}'. "
+                "Expected one of: target, previous_target, target_next, previous_target_next"
+            )
 
         parts = [str(p) for p in parts if pd.notna(p)]
         text = " [SEP] ".join(parts)
@@ -162,6 +167,7 @@ def compute_and_check_split_stats(
     for split, df in splits.items():
         label_counts_by_split[split] = _label_counts(df, label_col)
     
+    split_stats = {"n": split_sizes, "label_counts": label_counts_by_split}
     if language == 'GL': 
         return split_stats, (len(reasons) != 0), reasons
 
@@ -174,7 +180,5 @@ def compute_and_check_split_stats(
         for label, count in sorted(counts.items()):
             if count < min_label_count:
                 reasons.append(f"{split} class {label} too small: {count} < {min_label_count}")
-
-    split_stats = {"n": split_sizes, "label_counts": label_counts_by_split}
 
     return split_stats, (len(reasons) != 0), reasons

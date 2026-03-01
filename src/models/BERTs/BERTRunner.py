@@ -152,9 +152,13 @@ class BERTRunner:
                     # Evaluation & saving
                     eval_strategy="epoch",
                     save_strategy="epoch",
-                    save_total_limit=2,
+                    save_total_limit=1,
+                    save_only_model=True,      # avoids optimizer.pt/scheduler.pt
+                    save_total_limit=1,
                     load_best_model_at_end=True,
                     metric_for_best_model="macro-F1",
+                    greater_is_better=True,
+                
 
                     # Reproducibility
                     seed=config['seed'],
@@ -208,7 +212,7 @@ class BERTRunner:
             raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
                 
         best_model_dir = model_path
-        best_model.model.save_pretrained(best_model_dir)
+        best_model.model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
 
         return best_model, results, best_params, best_curves
