@@ -18,3 +18,4 @@ wandb/
 
 ./src/analysis
 ./src/models/logreg
+experiments

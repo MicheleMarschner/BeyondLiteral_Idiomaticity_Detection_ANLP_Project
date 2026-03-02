@@ -20,6 +20,6 @@ EXPERIMENTS = ExperimentTemplate(
     input_variant=[
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []}
     ],
-    model_families=["mBERT"],
+    model_families=["logreg_tfidf"],
     seeds=[51]
 )
