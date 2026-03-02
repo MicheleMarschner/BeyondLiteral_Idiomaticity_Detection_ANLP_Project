@@ -82,7 +82,7 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     if experiment_config["language_mode"] == "multilingual":
         metrics = compute_metrics_per_language(
             gold_labels=test_data["label"],
-            proba_literal=test_proba,
+            preds=test_preds,
             languages=test_data["Language"],
             threshold=0.5,
         )

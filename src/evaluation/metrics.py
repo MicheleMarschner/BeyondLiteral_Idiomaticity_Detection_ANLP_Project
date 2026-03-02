@@ -85,7 +85,7 @@ def compute_metrics_per_language(
 ) -> Dict[str, Any]:
     
     gold_labels = to_numpy_int(gold_labels)
-    preds = to_numpy_float(preds)
+    preds = to_numpy_int(preds)
     langs = np.asarray(languages)
 
     out: Dict[str, Any] = {
