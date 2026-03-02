@@ -20,7 +20,7 @@ def build_test_predictions(
             "id": str(id),
             "label": int(y),
             "test_pred": int(preds),
-            "test_proba": float(proba)
+            "test_proba_literal": float(proba)
         }
         for id, y, preds, proba in zip(ids, gold_labels, preds, proba)
     ]

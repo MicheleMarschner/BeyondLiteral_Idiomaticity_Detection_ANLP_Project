@@ -94,9 +94,7 @@ class BERTRunner:
         threshold: float=0.5
     ) -> Tuple[Trainer, List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
-
-        print("[DEBUG] model_path: ", model_path)
-        
+    
         out_dir = model_path / "training"
         results = []
         best_f1 = -1.0
@@ -135,7 +133,8 @@ class BERTRunner:
                     f"ml{tokenization_config['max_length']}"
                     f"__lr{learning_config['learning_rate']}"
                     f"__ep{learning_config['num_train_epochs']}"
-                    f"__wd{learning_config.get('weight_decay', 0.0)}"
+                    f"__wd{learning_config['weight_decay']}"
+                    f"__bs{learning_config['batch_size']}"
                     f"__seed{config['seed']}"
                 )
                 run_dir = out_dir / run_name
@@ -160,7 +159,6 @@ class BERTRunner:
                     metric_for_best_model="macro-F1",
                     greater_is_better=True,
                 
-
                     # Reproducibility
                     seed=config['seed'],
                     logging_dir=str(run_dir / "logs"),
@@ -213,7 +211,6 @@ class BERTRunner:
             raise RuntimeError("Tuning failed: no valid parameter combination produced a trained model.")
                 
         best_model_dir = model_path
-        print("[DEBUG]", best_model_dir)
         best_model.model.save_pretrained(best_model_dir, safe_serialization=True)
         best_tokenizer.save_pretrained(best_model_dir)
 
@@ -221,7 +218,7 @@ class BERTRunner:
 
 
     def predict_proba(self, trainer, X: Any) -> np.ndarray:
-        """Wrapper to get positive-class probabilities from a model"""
+        """Wrapper to get literal-class probabilities from a model"""
         
         out = trainer.predict(X)
         logits = out.predictions  
@@ -231,6 +228,6 @@ class BERTRunner:
         logits = logits - logits.max(axis=1, keepdims=True)  
         probs = np.exp(logits) / np.exp(logits).sum(axis=1, keepdims=True)
 
-        proba_pos = probs[:, 1]   # class 1
+        proba_literal = probs[:, 1]   # class 1
         
-        return proba_pos.astype(float)
+        return proba_literal.astype(float)

@@ -5,7 +5,7 @@ from utils.helper import to_numpy_int, to_numpy_float
 
 
 def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
-    """Convert 1D positive-class probabilities into 0/1 predictions using a threshold."""
+    """Convert 1D literal-class probabilities into 0/1 predictions using a threshold."""
     
     proba = to_numpy_float(proba)
     assert proba.ndim == 1, (f"probabilities must be 1D after squeeze, got shape {proba.shape}")
