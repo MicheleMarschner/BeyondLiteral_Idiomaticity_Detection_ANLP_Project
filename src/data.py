@@ -97,6 +97,31 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
     return df
 
 
+def filter_by_language_mode(train_data, dev_data, test_data, config):
+    """Filter splits by language mode: per-language, EN→PT cross-lingual, or multilingual (no filter, joint)."""
+    
+    mode = config["language_mode"]
+
+    if mode == "per_language":
+        lang = config["language"]
+        train_data = train_data[train_data["Language"] == lang].copy()
+        dev_data   = dev_data[dev_data["Language"] == lang].copy()
+        test_data  = test_data[test_data["Language"] == lang].copy()
+
+    elif mode == "cross_lingual":
+        train_data = train_data[train_data["Language"] == "EN"].copy()
+        dev_data   = dev_data[dev_data["Language"] == "EN"].copy()
+        test_data  = test_data[test_data["Language"] == "PT"].copy()
+
+    elif mode == "multilingual":
+        pass
+
+    else:
+        raise ValueError(f"Unknown language_mode: {mode}")
+
+    return train_data, dev_data, test_data
+
+
 def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load train/dev/test data for the chosen setting and build the input variant"""
 
@@ -110,11 +135,10 @@ def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFra
     dev_data = read_csv_data(dev_data_path)
     test_data = read_csv_data(test_data_path)
 
-    train_data = train_data[train_data['Language'] == config['language']].copy()
-    dev_data = dev_data[dev_data['Language'] == config['language']].copy()
-    test_data = test_data[test_data['Language'] == config['language']].copy()
-
+    train_data, dev_data, test_data = filter_by_language_mode(train_data, dev_data, test_data, config)
+    
     return train_data, dev_data, test_data
+
 
 
 def build_inputs_for_splits(

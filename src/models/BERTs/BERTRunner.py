@@ -152,7 +152,7 @@ class BERTRunner:
 
                     # Evaluation & saving
                     eval_strategy="epoch",
-                    save_strategy="epoch",
+                    save_strategy="epoch",  # no?
                     save_total_limit=1,
                     save_only_model=True,      # avoids optimizer.pt/scheduler.pt
                     load_best_model_at_end=True,
