@@ -75,3 +75,31 @@ def compute_metrics(
         "macro_f1": float(macro_f1),
         "confusion_matrix_values": confusion_matrix_values, 
     }
+
+
+def compute_metrics_per_language(
+    gold_labels: Sequence[int],
+    preds: Sequence[float],   
+    languages: Sequence[str],
+    threshold: float = 0.5,
+) -> Dict[str, Any]:
+    
+    gold_labels = to_numpy_int(gold_labels)
+    preds = to_numpy_float(preds)
+    langs = np.asarray(languages)
+
+    out: Dict[str, Any] = {
+        "overall": compute_metrics(gold_labels, preds),
+        "per_language": {},
+    }
+
+    langs_unique = np.unique(langs)
+
+    for lang in langs_unique:
+        lang_mask = (langs == lang)              # boolean mask
+        gold_lang = gold_labels[lang_mask]       
+        preds_lang = preds[lang_mask]            
+
+        out["per_language"][str(lang)] = compute_metrics(gold_lang, preds_lang)
+
+    return out

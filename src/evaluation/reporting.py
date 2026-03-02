@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Dict, Sequence, Tuple, Any
 
@@ -27,19 +27,31 @@ def build_test_predictions(
     return rows
 
 
-def flatten_metrics(metrics: Dict[str, Any]) -> Dict[str, Any]:
+def flatten_metrics(metrics):
     """Convert metrics into a flat row to log results and combine them across experiments for later analysis."""
-    cm = metrics.get("confusion_matrix_values", {})
-    return {
-        "accuracy": metrics.get("accuracy"),
-        "macro_precision": metrics.get("macro_precision"),
-        "macro_recall": metrics.get("macro_recall"),
-        "macro_f1": metrics.get("macro_f1"),
-        "tp": cm.get("tp"),
-        "tn": cm.get("tn"),
-        "fp": cm.get("fp"),
-        "fn": cm.get("fn"),
-    }
+    out = {}
+
+    if "overall" in metrics:
+        blocks = [("overall_", metrics["overall"])] + [
+            (f"{lang}_", metric) for lang, metric in metrics.get("per_language", {}).items()
+        ]
+    else:
+        blocks = [("", metrics)]
+
+    for prefix, metric in blocks:
+        cm = metric.get("confusion_matrix_values", {})
+        out.update({
+            f"{prefix}accuracy": metric.get("accuracy"),
+            f"{prefix}macro_precision": metric.get("macro_precision"),
+            f"{prefix}macro_recall": metric.get("macro_recall"),
+            f"{prefix}macro_f1": metric.get("macro_f1"),
+            f"{prefix}tp": cm.get("tp"),
+            f"{prefix}tn": cm.get("tn"),
+            f"{prefix}fp": cm.get("fp"),
+            f"{prefix}fn": cm.get("fn"),
+        })
+
+    return out
 
 
 def save_artifacts(
