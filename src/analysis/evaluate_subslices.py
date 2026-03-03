@@ -1,5 +1,4 @@
 import json
-import re
 from typing import Any, Dict, List
 
 import numpy as np
@@ -21,7 +20,7 @@ def evaluate_slices_for_run(
     pred_df["id"] = pred_df["id"].astype(str)
     pred_df["label"] = pred_df["label"].astype(int)
     pred_df["test_pred"] = pred_df["test_pred"].astype(int)
-    #pred_df["test_proba_literal"] = pred_df["test_proba_literal"].astype(float)
+    pred_df["test_proba_literal"] = pred_df["test_proba_literal"].astype(float)
 
     pred_by_id = pred_df.set_index("id", drop=False)
 
@@ -36,19 +35,18 @@ def evaluate_slices_for_run(
 
         y = sub["label"].to_numpy()
         preds = sub["test_pred"].to_numpy()
-        #p = sub["test_proba_literal"].to_numpy()
+        p = sub["test_proba_literal"].to_numpy()
 
         metrics = compute_metrics(y, preds)
 
-        #proba_stats = {
-        #    "log_loss": log_loss(y, p),
-        #    "mean_pred_conf": mean_pred_confidence(p),
-        #    "mean_p_literal": float(np.mean(p)),
-        #    "std_p_literal": float(np.std(p)),
-        #}
+        proba_stats = {
+            "log_loss": log_loss(y, p),
+            "mean_pred_conf": mean_pred_confidence(p),
+            "mean_p_literal": float(np.mean(p)),
+            "std_p_literal": float(np.std(p)),
+        }
 
-        #out[slice_name] = {"n": int(len(sub)), **metrics, "proba_stats": proba_stats}
-        out[slice_name] = {"n": int(len(sub)), **metrics}
+        out[slice_name] = {"n": int(len(sub)), **metrics, "proba_stats": proba_stats}
 
     return out
 
@@ -93,9 +91,6 @@ def flatten_slice_metrics(
     return pd.DataFrame(rows)
 
 
-
-
-"""
 def add_deltas_vs_reference(
     df_long: pd.DataFrame,
     *,
@@ -148,7 +143,7 @@ def add_deltas_between_two_slices(
 
     return merged
 
-    def log_loss(y: np.ndarray, p: np.ndarray, eps: float = 1e-12) -> float:
+def log_loss(y: np.ndarray, p: np.ndarray, eps: float = 1e-12) -> float:
     '''
     y in {0,1}, p = P(y=1 | x)
     '''
@@ -166,7 +161,6 @@ def mean_pred_confidence(p: np.ndarray) -> float:
     conf = np.maximum(p, 1.0 - p)
     return float(np.mean(conf))
 
-"""
 
 def evaluate_all_runs(
     runs_root: Path,

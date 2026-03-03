@@ -4,7 +4,7 @@ from config import PATHS, Paths
 from analysis.evaluate_subslices import evaluate_subslices
 from analysis.create_subslices import add_ambiguous_slices, build_slices_and_ids
 from analysis.stress_masking import run_stress_masking_over_all_runs
-from utils.helper import copy_file, write_json
+from utils.helper import copy_original_dataset, write_json
 
 
 
@@ -18,7 +18,7 @@ def run_analysis(split_type: str, project_paths: Paths = PATHS):
         df = pd.read_csv(data_path)
 
         if not analysis_data_path.exists():
-            copy_file(data_path, analysis_data_path)
+            copy_original_dataset(data_path, analysis_data_path)
 
             df_with_slices, slice_ids = build_slices_and_ids(df, min_total=5)
 
@@ -33,4 +33,4 @@ def run_analysis(split_type: str, project_paths: Paths = PATHS):
 
     evaluate_subslices(split_type="test")
     
-    run_stress_masking_over_all_runs(experiments_root, results_root)
+    run_stress_masking_over_all_runs(PATHS.runs, PATHS.results)
