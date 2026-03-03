@@ -192,10 +192,9 @@ def copy_file(src_file: Path, dst_file: Path, overwrite: bool = False) -> Path:
     if not src_file.exists():
         raise FileNotFoundError(f"Source file not found: {src_file}")
 
-    ensure_dir(dst_file)
 
-    if dst_file.exists():
-        raise 
+    if dst_file.exists() and not overwrite:
+        raise FileExistsError(f"Destination file already exists: {dst_file} (set overwrite=True)")
 
     shutil.copy2(src_file, dst_file)  # copy2 keeps timestamps/metadata
     return dst_file

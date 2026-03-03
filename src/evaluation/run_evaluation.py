@@ -1,7 +1,8 @@
 from pathlib import Path
+import pandas as pd 
 
-from pandas import pd 
-from src.utils.helper import ensure_dir, read_json
+from config import PATHS
+from utils.helper import ensure_dir, read_json
 
 
 
@@ -18,38 +19,64 @@ def flatten_run(run_dir: Path) -> list[dict]:
         "model_family": exp_config["model_family"],
         "seed": exp_config["seed"],
         "context": input_variant["context"],
-        "features": ",".join(input_variant.get("features", [])),
-        "include_mwe_segment": input_variant.get("include_mwe_segment"),
-        "transform": input_variant.get("transform"),
+        "features": ",".join(input_variant["features"]),
+        "include_mwe_segment": input_variant["include_mwe_segment"],
+        "transform": input_variant["transform"],
     }
 
-    rows: list[dict] = []
+    rows = []
 
-    def add_block(eval_language: str, m: dict):
-        cm = m.get("confusion_matrix_values", {})
+    if isinstance(metrics, dict) and "overall" in metrics:
+        overall_metrics = metrics.get("overall", {})
+        overall_cm = overall_metrics.get("confusion_matrix_values", {})
+
         rows.append({
             **base,
-            "eval_language": eval_language,
-            "accuracy": m.get("accuracy"),
-            "macro_f1": m.get("macro_f1"),
-            "macro_precision": m.get("macro_precision"),
-            "macro_recall": m.get("macro_recall"),
-            "tp": cm.get("tp"),
-            "tn": cm.get("tn"),
-            "fp": cm.get("fp"),
-            "fn": cm.get("fn"),
+            "eval_language": "overall",
+            "accuracy": overall_metrics.get("accuracy"),
+            "macro_f1": overall_metrics.get("macro_f1"),
+            "macro_precision": overall_metrics.get("macro_precision"),
+            "macro_recall": overall_metrics.get("macro_recall"),
+            "tp": overall_cm.get("tp"),
+            "tn": overall_cm.get("tn"),
+            "fp": overall_cm.get("fp"),
+            "fn": overall_cm.get("fn"),
         })
 
-    # multilingual metrics
-    if isinstance(metrics, dict) and "overall" in metrics:
-        add_block("overall", metrics.get("overall", {}))
-        for lang, m in metrics.get("per_language", {}).items():
-            add_block(str(lang), m)
+        for eval_lang, lang_metrics in metrics.get("per_language", {}).items():
+            lang_cm = lang_metrics.get("confusion_matrix_values", {})
+            rows.append({
+                **base,
+                "eval_language": str(eval_lang),
+                "accuracy": lang_metrics.get("accuracy"),
+                "macro_f1": lang_metrics.get("macro_f1"),
+                "macro_precision": lang_metrics.get("macro_precision"),
+                "macro_recall": lang_metrics.get("macro_recall"),
+                "tp": lang_cm.get("tp"),
+                "tn": lang_cm.get("tn"),
+                "fp": lang_cm.get("fp"),
+                "fn": lang_cm.get("fn"),
+            })
+
     else:
-        # per-language / cross-lingual runs usually have flat metrics
-        add_block(str(exp_config.get("language")), metrics)
+        flat_metrics = metrics if isinstance(metrics, dict) else {}
+        flat_cm = flat_metrics.get("confusion_matrix_values", {})
+
+        rows.append({
+            **base,
+            "eval_language": str(exp_config.get("language")),
+            "accuracy": flat_metrics.get("accuracy"),
+            "macro_f1": flat_metrics.get("macro_f1"),
+            "macro_precision": flat_metrics.get("macro_precision"),
+            "macro_recall": flat_metrics.get("macro_recall"),
+            "tp": flat_cm.get("tp"),
+            "tn": flat_cm.get("tn"),
+            "fp": flat_cm.get("fp"),
+            "fn": flat_cm.get("fn"),
+        })
 
     return rows
+
 
 
 def load_all_runs(runs_root: Path) -> pd.DataFrame:
@@ -74,6 +101,6 @@ def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
 
     return df
 
-def run_evaluation(experiments_root, results_root):
-    overview_df = create_evaluation_overview(experiments_root, results_root)
+def run_evaluation():
+    overview_df = create_evaluation_overview(experiments_root=PATHS.runs, results_root=PATHS.results)
 
