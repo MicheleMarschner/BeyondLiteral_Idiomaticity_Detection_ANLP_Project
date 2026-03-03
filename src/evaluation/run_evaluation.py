@@ -2,27 +2,15 @@ from pathlib import Path
 import pandas as pd 
 
 from config import PATHS
+from evaluation.reporting import extract_run_base
 from utils.helper import ensure_dir, read_json
-
 
 
 def flatten_run(run_dir: Path) -> list[dict]:
     exp_config = read_json(run_dir / "experiment_config.json")
     metrics = read_json(run_dir / "metrics.json")
 
-    input_variant = exp_config["input_variant"]
-    base = {
-        "run_dir": run_dir.name,
-        "setting": exp_config["setting"],
-        "language_mode": exp_config["language_mode"],
-        "language": exp_config["language"],
-        "model_family": exp_config["model_family"],
-        "seed": exp_config["seed"],
-        "context": input_variant["context"],
-        "features": ",".join(input_variant["features"]),
-        "include_mwe_segment": input_variant["include_mwe_segment"],
-        "transform": input_variant["transform"],
-    }
+    base = extract_run_base(run_dir)
 
     rows = []
 

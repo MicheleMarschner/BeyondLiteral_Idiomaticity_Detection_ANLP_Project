@@ -71,3 +71,19 @@ def save_artifacts(
     print(f"All files successfully written to {run_dir}")
 
 
+def extract_run_base(run_dir: Path) -> Dict[str, Any]:
+    exp_config = read_json(run_dir / "experiment_config.json")
+    input_variant = exp_config["input_variant"]
+
+    return {
+        "run_dir": run_dir.name,
+        "setting": exp_config.get("setting"),
+        "language_mode": exp_config.get("language_mode"),
+        "language": exp_config.get("language"),
+        "model_family": exp_config.get("model_family"),
+        "seed": exp_config.get("seed"),
+        "context": input_variant.get("context"),
+        "features": ",".join(input_variant.get("features", [])),
+        "include_mwe_segment": input_variant.get("include_mwe_segment"),
+        "transform": input_variant.get("transform"),
+    }

@@ -5,6 +5,7 @@ from experiments.run_experiments import run_experiments
 from config import PATHS
 from analysis.run_analysis import run_analysis
 from evaluation.run_evaluation import run_evaluation
+from utils.helper import ensure_dirs
 
 
 def main() -> None:
@@ -15,9 +16,10 @@ def main() -> None:
 
     # analyse-specific flags
     parser.add_argument("--split", choices=["train", "dev", "test"], help="Split to analyse")
-    parser.add_argument("--setting", choices=["zero_shot", "one_shot"], help="Setting to analyse")
 
     args = parser.parse_args()
+
+    ensure_dirs(PATHS)
 
     if args.action == "train":
         if not args.arg1:
@@ -29,11 +31,10 @@ def main() -> None:
         run_evaluation()
     
     if args.action == "analyse":
-        #if not args.split or not args.setting:
-        #    parser.error("analyse requires --split and --setting. Example: analyse <arg1> --split test --setting zero_shot")
-        
-        project_paths = args.arg1 or PATHS
-        run_analysis(project_paths=project_paths, setting=args.setting, split_type=args.split)
+        if not args.split:
+            parser.error("analyse requires --split (train/dev/test)")
+
+        run_analysis(split_type=args.split, project_paths=PATHS)
     
     
 if __name__ == "__main__":

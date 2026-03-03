@@ -7,6 +7,7 @@ from pathlib import Path
 
 from evaluation.metrics import compute_metrics
 from config import PATHS
+from evaluation.reporting import extract_run_base
 from utils.helper import write_json
 
 
@@ -43,16 +44,15 @@ def evaluate_slices_for_run(
 
 
 def flatten_slice_metrics(
-    run_dir: str,
     slice_metrics: Dict[str, Any],
+    base: Dict[str, Any],       
 ) -> pd.DataFrame:
     rows = []
     for slice_name, m in slice_metrics.items():
-        proba = m.get("proba_stats", {}) if isinstance(m, dict) else {}
         cm = m.get("confusion_matrix_values", {}) if isinstance(m, dict) else {}
 
         rows.append({
-            "run_dir": run_dir,
+            **base,                 
             "slice": slice_name,
             "n": m.get("n", 0),
 
@@ -65,15 +65,8 @@ def flatten_slice_metrics(
             "tn": cm.get("tn"),
             "fp": cm.get("fp"),
             "fn": cm.get("fn"),
-
-            "log_loss": proba.get("log_loss"),
-            "mean_pred_conf": proba.get("mean_pred_conf"),
-            "mean_p_literal": proba.get("mean_p_literal"),
-            "std_p_literal": proba.get("std_p_literal"),
         })
-
     return pd.DataFrame(rows)
-
 
 
 def evaluate_all_runs(
@@ -123,7 +116,8 @@ def evaluate_all_runs(
         slice_metrics = evaluate_slices_for_run(pred_csv, run_slice_ids)
         write_json(exp_dir / "slice_metrics.json", slice_metrics)
 
-        df_long = flatten_slice_metrics(exp_dir.name, slice_metrics)
+        base = extract_run_base(exp_dir)
+        df_long = flatten_slice_metrics(slice_metrics, base=base)
         rows_all.append(df_long)
 
     if not rows_all:
