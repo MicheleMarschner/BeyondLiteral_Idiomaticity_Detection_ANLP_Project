@@ -1,174 +1,117 @@
 from pathlib import Path
 import pandas as pd
 
-from typing import Dict, Any
-
-from config import PATHS, Paths
-from utils.helper import read_json, ensure_dir
-
-
-def _format_mean_std(mean, std):
-    if pd.isna(mean):
-        return ""
-    if pd.isna(std):
-        return f"{mean:.4f}"
-    return f"{mean:.4f} ± {std:.4f}"
+from src.config import PATHS
+from src.evaluation.plots import plot_delta_bar, plot_en_pt_scatter, plot_heatmap_context_signal, plot_one_shot_gain
+from src.evaluation.reporting import ablation_delta, load_all_runs, view_per_signal
+from src.utils.helper import ensure_dir
 
 
-def create_overview_per_experiment_config(selected_config: Dict[str, Any], experiments_root: Path, results_root: Path) -> None:
-    """
-    Create and save an overview table for one experiment config (setting/language/input_variant),
-    comparing model families aggregated over seeds
-    """
 
-    setting = selected_config.get('setting')
-    language = selected_config.get('language')
-    input_variant = selected_config.get('input_variant')
-    
+def create_evaluation_tables_and_views() -> None:
+    df = load_all_runs(PATHS.runs)
 
-    rows = []
-
-    # scan all run folders and collect metrics for runs that match the selected experiment configs
-    for experiment_dir in sorted(experiments_root.iterdir()):
-        if not experiment_dir.is_dir():
-            continue
-        
-        experiment_config_path = experiment_dir / "experiment_config.json"
-        experiment_config = read_json(experiment_config_path)
-
-        # match: same language, setting, input_variant
-        if experiment_config.get('setting') != setting:
-            continue
-        if experiment_config.get('language') != language:
-            continue
-        if experiment_config.get('input_variant') != input_variant:
-            continue
-        
-        metrics_path = experiment_dir / "metrics.json"
-        metrics = read_json(metrics_path)
-
-        # store one row per run
-        rows.append({
-            "run_dir": experiment_dir.name,
-            "model_family": experiment_config.get('model_family'),
-            "seed": experiment_config.get('seed'),
-            "macro_f1": metrics.get('macro_f1'),
-            "macro_precision": metrics.get('macro_precision'),
-            "macro_recall": metrics.get('macro_recall'),
-        })
-
-    df = pd.DataFrame(rows)
-    
-    if df.empty:
-        return
-    
-    # ensure metric columns are numeric
-    for col in ["macro_f1", "macro_precision", "macro_recall"]:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    # aggregate over seeds per model family
-    agg = (
-        df.groupby("model_family", dropna=False)
-          .agg(
-              n_runs=('run_dir', 'count'), 
-              n_seeds=('seed', pd.Series.nunique),
-              macro_f1_mean=('macro_f1', 'mean'),
-              macro_f1_std=('macro_f1', 'std'),
-              macro_precision_mean=('macro_precision', 'mean'),
-              macro_precision_std=('macro_precision', 'std'),
-              macro_recall_mean=('macro_recall', 'mean'),
-              macro_recall_std=('macro_recall', 'std'),
-          )
-          .reset_index()
-    )
-
-    # create a wide "overview" table: metric rows × model columns with 
-    # rows: macro_f1 / macro_precision / macro_recall
-    # columns: each model_family
-    # cells: formatted "mean ± std"
-    metrics = ["macro_f1", "macro_precision", "macro_recall"]
-    overview_df = pd.DataFrame(index=metrics)
-
-    for model_family, row in agg.set_index('model_family').iterrows():
-        for m in metrics:
-            overview_df.loc[m, model_family] = _format_mean_std(row[f"{m}_mean"], row[f"{m}_std"])
-
-    # sort columns by macro_f1_mean desc
-    order = (
-        agg.sort_values("macro_f1_mean", ascending=False, na_position="last")["model_family"]
-           .astype(str)
-           .tolist()
-    )
-    overview_df = overview_df.reindex(columns=order)
-
-    # save overview table
-    out_dir = results_root / "tables"
+    out_dir = PATHS.results
     ensure_dir(out_dir)
-    out_path = out_dir / f"evaluation_overview_{setting}__{language}__{input_variant}.csv"
-    overview_df.reset_index(names="metric").to_csv(out_path, index=False)
+
+    # Save master long table (single seed -> one row per run per eval_language)
+    df.to_csv(out_dir / "master_metrics_long.csv", index=False)
 
 
-def create_overview_per_model(
-    experiments_root: Path,
-    model_family: str,
-    results_root: Path
-) -> None:
-    """Create and save an overview table for all runs belonging to a model family, sorted by macro_F1 score"""
+    delta_highlight = ablation_delta(
+        df,
+        group_cols=["setting", "language_mode", "language", "model_family", "seed", "context", "transform", "include_mwe_segment"],
+        baseline_filter={"features": {"contains": "empty"}},       
+        variant_filter={"features": {"contains": "highlight"}},
+        eval_languages=("overall", "EN", "PT", "GL"),
+    )
+    delta_highlight.to_csv(out_dir / "delta__highlight_vs_none.csv", index=False)
 
-    rows = []
 
-    # scan all run folders and collect metrics for runs that match the selected model family
-    for experiment_dir in sorted(experiments_root.iterdir()):
-        if not experiment_dir.is_dir():
-            continue
-        
-        experiment_config_path = experiment_dir / "experiment_config.json"
-        experiment_config = read_json(experiment_config_path)
-        
-        # match: model family
-        if experiment_config.get('model_family') != model_family:
-            continue
+    one_shot_gain = ablation_delta(
+        df,
+        group_cols=["language_mode", "language", "model_family", "seed", "context", "features", "transform", "include_mwe_segment", "eval_language"],
+        baseline_filter={"setting": "zero_shot"},
+        variant_filter={"setting": "one_shot"},
+        eval_languages=("overall", "EN", "PT", "GL"),
+    )
+    one_shot_gain.to_csv(out_dir / "delta__one_shot_minus_zero_shot.csv", index=False)
 
-        metrics_path = experiment_dir / "metrics.json"
-        if metrics_path.exists():
-            metrics = read_json(metrics_path)
+    # Per-signal view (overall) for quick inspection
+    view_per_signal(df, eval_language="overall").to_csv(out_dir / "view__per_signal__overall.csv", index=False)
+    view_per_signal(df, eval_language="EN").to_csv(out_dir / "view__per_signal__EN.csv", index=False)
+    view_per_signal(df, eval_language="PT").to_csv(out_dir / "view__per_signal__PT.csv", index=False)
 
-        # store one row per run
-        row = {
-            "setting": experiment_config.get('setting'),
-            "language_mode": experiment_config.get('language_mode'),
-            "language": experiment_config.get('language'),
-            "input_variant": experiment_config.get('input_variant'),
-            "seed": experiment_config.get('seed'),
-            "model_family": experiment_config.get('model_family'),
+    print(f"[analysis] wrote outputs to: {out_dir}")
+
+
+
+def create_evaluation_plots(results_dir: Path) -> None:
+    master = pd.read_csv(results_dir / "master_metrics_long.csv")
+    delta_highlight = pd.read_csv(results_dir / "delta__highlight_vs_none.csv") if (results_dir / "delta__highlight_vs_none.csv").exists() else None
+    one_shot = pd.read_csv(results_dir / "delta__one_shot_minus_zero_shot.csv") if (results_dir / "delta__one_shot_minus_zero_shot.csv").exists() else None
+
+    plots_dir = results_dir / "plots"
+    ensure_dir(plots_dir)
+
+
+    contexts = ["previous_target_next", "target"]  
+    signals = ["none", "highlight", "gloss+NER"]  
+
+    for setting in sorted(master["setting"].dropna().unique()):
+        for model_family in sorted(master["model_family"].dropna().unique()):
             
-            "macro_f1": metrics.get('macro_f1'),
-            "macro_precision": metrics.get('macro_precision'),
-            "macro_recall": metrics.get('macro_recall')
-        }
-
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-    
-    # ensure metric columns are numeric
-    for col in ["macro_f1", "macro_precision", "macro_recall"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    df = df.sort_values(by=["macro_f1"], ascending=False, na_position="last").reset_index(drop=True)
-    
-    # save overview table
-    out_dir = results_root / "tables"
-    ensure_dir(out_dir)
-    out_path = out_dir / f"evaluation_overview_{model_family}.csv"
-    df.to_csv(out_path, index=False)
+            plot_heatmap_context_signal(
+                master, plots_dir,
+                setting=setting, model_family=model_family,
+                eval_language="overall",
+                language_mode="multilingual",
+                contexts=contexts, signals=signals
+            )
+            
+            for ev in ["EN", "PT", "GL"]:
+                plot_heatmap_context_signal(
+                    master, plots_dir,
+                    setting=setting, model_family=model_family,
+                    eval_language=ev,
+                    language_mode="multilingual",
+                    contexts=contexts, signals=signals
+                )
 
     
+    if delta_highlight is not None:
+        for ev in ["overall", "EN", "PT", "GL"]:
+            plot_delta_bar(
+                delta_highlight, plots_dir,
+                title="Δ highlight vs none",
+                out_name="delta__highlight_vs_none",
+                eval_language=ev,
+                group_by=["setting","model_family","context","language_mode","language"],
+            )
 
-def run_evaluation(paths: Paths=PATHS, model_family=None, experiment_config=None):
-    if model_family is not None:
-        create_overview_per_model(model_family, paths.runs, paths.results)
-    
-    if experiment_config is not None:
-        create_overview_per_experiment_config(experiment_config, paths.runs, paths.results)
+
+    if one_shot is not None:
+        for ev in ["overall", "EN", "PT", "GL"]:
+            plot_one_shot_gain(one_shot, plots_dir, eval_language=ev)
+
+
+    for setting in sorted(master["setting"].dropna().unique()):
+        for model_family in sorted(master["model_family"].dropna().unique()):
+            plot_en_pt_scatter(master, plots_dir, setting=setting, model_family=model_family)
+
+    print(f"[plots] wrote plots to: {plots_dir}")
+
+
+
+def run_evaluation():
+    create_evaluation_tables_and_views()
+    # from src.config import PATHS
+    # stats_long = load_split_stats_table(PATHS.runs)
+    # stats_long.to_csv(PATHS.results / "split_stats_long.csv", index=False)
+    # paper_stats = make_paper_data_stats(stats_long)
+    # paper_stats.to_csv(PATHS.results / "data_stats_table.csv", index=False)
+    # print(paper_stats)
+    #print(paper_stats[paper_stats["language"].astype(str).str.contains("EN")])
+    create_evaluation_plots(PATHS.results)
+
+
