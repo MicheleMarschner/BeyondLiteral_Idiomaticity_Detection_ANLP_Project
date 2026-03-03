@@ -3,8 +3,7 @@ import pandas as pd
 
 from config import PATHS
 from evaluation.plots import plot_delta_bar, plot_en_pt_scatter, plot_heatmap_context_signal, plot_one_shot_gain
-from evaluation.reporting import ablation_delta, load_all_runs, view_per_signal
-from utils.helper import ensure_dir
+from utils.helper import ensure_dir, read_json
 
 
 def flatten_run(run_dir: Path) -> list[dict]:
@@ -97,6 +96,7 @@ def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
     df = load_all_runs(experiments_root)
     ensure_dir(results_root)
 
+    """
     # Save master long table (single seed -> one row per run per eval_language)
     df.to_csv(out_dir / "master_metrics_long.csv", index=False)
 
@@ -126,6 +126,7 @@ def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
     view_per_signal(df, eval_language="PT").to_csv(out_dir / "view__per_signal__PT.csv", index=False)
 
     print(f"[analysis] wrote outputs to: {out_dir}")
+    """
 
 
 def create_evaluation_plots(results_dir: Path) -> None:
