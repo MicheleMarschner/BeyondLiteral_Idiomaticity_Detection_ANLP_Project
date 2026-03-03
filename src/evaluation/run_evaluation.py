@@ -7,7 +7,6 @@ from src.evaluation.reporting import ablation_delta, load_all_runs, view_per_sig
 from src.utils.helper import ensure_dir
 
 
-
 def create_evaluation_tables_and_views() -> None:
     df = load_all_runs(PATHS.runs)
 
