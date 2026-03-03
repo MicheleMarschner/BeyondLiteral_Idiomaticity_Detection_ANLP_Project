@@ -49,7 +49,7 @@ def get_model(
             model = joblib.load(model_path)
         else:
             model = AutoModelForSequenceClassification.from_pretrained(model_path)
-            # tokenizer = AutoTokenizer.from_pretrained(model_path)
+            best_params["tokenizer_source"] = str(model_path)
 
             for p in model.parameters():
                 p.requires_grad = False

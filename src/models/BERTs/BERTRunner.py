@@ -26,7 +26,8 @@ def tokenize_input(params, train_data, dev_data):
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
 
-    tokenizer = AutoTokenizer.from_pretrained(params["model_identifier"])
+    tokenizer_src = params.get("tokenizer_source", params["model_identifier"])
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_src)
     max_length = int(params["max_length"])
 
     train_dataset = train_dataset.map(
