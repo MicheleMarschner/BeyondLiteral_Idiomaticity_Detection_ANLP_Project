@@ -259,7 +259,7 @@ def evaluate_all_runs(
     return df_long_all
 
 
-def subslice_evaluation(split_type: str="test"):
+def evaluate_subslices(split_type: str="test"):
     runs_root = PATHS.runs
     save_dir = PATHS.results
     evaluate_all_runs(runs_root=runs_root, save_dir=save_dir, split_type=split_type)
