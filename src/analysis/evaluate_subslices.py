@@ -49,18 +49,18 @@ def flatten_slice_metrics(
 ) -> pd.DataFrame:
     """Converts per-slice metrics into a single long table with run metadata"""
     rows = []
-    for slice_name, m in slice_metrics.items():
-        cm = m.get("confusion_matrix_values", {}) if isinstance(m, dict) else {}
+    for slice_name, slice_result in slice_metrics.items():
+        cm = slice_result.get("confusion_matrix_values", {}) if isinstance(m, dict) else {}
 
         rows.append({
             **base,                 
             "slice": slice_name,
-            "n_samples": m.get("n_samples", 0),
+            "n_samples": slice_result.get("n_samples", 0),
 
-            "accuracy": m.get("accuracy"),
-            "macro_precision": m.get("macro_precision"),
-            "macro_recall": m.get("macro_recall"),
-            "macro_f1": m.get("macro_f1"),
+            "accuracy": slice_result.get("accuracy"),
+            "macro_precision": slice_result.get("macro_precision"),
+            "macro_recall": slice_result.get("macro_recall"),
+            "macro_f1": slice_result.get("macro_f1"),
 
             "tp": cm.get("tp"),
             "tn": cm.get("tn"),
