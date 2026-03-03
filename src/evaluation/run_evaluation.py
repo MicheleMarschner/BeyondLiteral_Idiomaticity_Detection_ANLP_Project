@@ -44,7 +44,6 @@ def create_evaluation_tables_and_views() -> None:
     print(f"[analysis] wrote outputs to: {out_dir}")
 
 
-
 def create_evaluation_plots(results_dir: Path) -> None:
     master = pd.read_csv(results_dir / "master_metrics_long.csv")
     delta_highlight = pd.read_csv(results_dir / "delta__highlight_vs_none.csv") if (results_dir / "delta__highlight_vs_none.csv").exists() else None
@@ -99,7 +98,6 @@ def create_evaluation_plots(results_dir: Path) -> None:
             plot_en_pt_scatter(master, plots_dir, setting=setting, model_family=model_family)
 
     print(f"[plots] wrote plots to: {plots_dir}")
-
 
 
 def run_evaluation():
