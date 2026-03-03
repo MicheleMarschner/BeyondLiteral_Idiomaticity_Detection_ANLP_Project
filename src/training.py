@@ -33,7 +33,7 @@ def get_model(
         # Trigger full training pipeline
         model, tuning_results, best_params, best_curves = runner.tune(experiment_config, model_path, train_data, val_data)
 
-        tuning_results.sort(key=lambda d: d.get("dev_macro_f1", float("-inf")), reverse=True)
+        tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
         write_json(experiment_dir / "tuning_results.json", tuning_results)
