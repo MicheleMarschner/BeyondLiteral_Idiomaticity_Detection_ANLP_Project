@@ -6,11 +6,13 @@ from evaluation.reporting import extract_run_base
 from utils.helper import ensure_dir, read_json
 
 
-def flatten_run(run_dir: Path) -> list[dict]:
-    exp_config = read_json(run_dir / "experiment_config.json")
-    metrics = read_json(run_dir / "metrics.json")
+def flatten_run(experiment_dir: Path) -> list[dict]:
+    """Flattens one run into metric rows (overall + per-language if available), with base metadata attached"""
 
-    base = extract_run_base(run_dir)
+    exp_config = read_json(experiment_dir / "experiment_config.json")
+    metrics = read_json(experiment_dir / "metrics.json")
+
+    base = extract_run_base(experiment_dir)
 
     rows = []
 
@@ -66,29 +68,30 @@ def flatten_run(run_dir: Path) -> list[dict]:
     return rows
 
 
+def load_all_runs(experiments_root: Path) -> pd.DataFrame:
+    """Loads and concatenates flattened metric rows for all experiments"""
 
-def load_all_runs(runs_root: Path) -> pd.DataFrame:
     all_rows: list[dict] = []
-    for d in sorted(runs_root.iterdir()):
-        if not d.is_dir():
+    for experiment_dir in sorted(experiments_root.iterdir()):
+        if not experiment_dir.is_dir():
             continue
-        if not (d / "experiment_config.json").exists():
-            continue
-        if not (d / "metrics.json").exists():
-            continue
-        all_rows.extend(flatten_run(d))
+        
+        all_rows.extend(flatten_run(experiment_dir))
     return pd.DataFrame(all_rows)
 
 
 def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
+    """Creates overview table containing base metadata + metrics for all experiments"""
+
     df = load_all_runs(experiments_root)
     ensure_dir(results_root)
 
-    # Save master long table (single seed -> one row per run per eval_language)
+    # Save master long table
     df.to_csv(results_root / "master_metrics_long.csv", index=False)
 
     return df
 
 def run_evaluation():
+    """Runs evaluation reporting and writes the master metrics table to the results directory"""
     overview_df = create_evaluation_overview(experiments_root=PATHS.runs, results_root=PATHS.results)
 

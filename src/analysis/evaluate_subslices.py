@@ -1,6 +1,5 @@
 import json
 from typing import Any, Dict, List
-
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -15,6 +14,7 @@ def evaluate_slices_for_run(
     pred_csv: Path,
     slice_ids: Dict[str, List[str]],
 ) -> Dict[str, Any]:
+    """Computes per-slice performance for one experiment run"""
     
     pred_df = pd.read_csv(pred_csv)
 
@@ -47,6 +47,7 @@ def flatten_slice_metrics(
     slice_metrics: Dict[str, Any],
     base: Dict[str, Any],       
 ) -> pd.DataFrame:
+    """Converts per-slice metrics into a single long table with run metadata"""
     rows = []
     for slice_name, m in slice_metrics.items():
         cm = m.get("confusion_matrix_values", {}) if isinstance(m, dict) else {}
@@ -54,7 +55,7 @@ def flatten_slice_metrics(
         rows.append({
             **base,                 
             "slice": slice_name,
-            "n": m.get("n", 0),
+            "n_samples": m.get("n_samples", 0),
 
             "accuracy": m.get("accuracy"),
             "macro_precision": m.get("macro_precision"),
@@ -76,6 +77,7 @@ def evaluate_all_runs(
     include_all_reference: bool = True,
     all_slice_name: str = "ALL",
 ) -> pd.DataFrame:
+    """Evaluates all available experiments on the same set of subslices and saves a master table"""
 
     rows_all = []
 
@@ -145,6 +147,7 @@ def evaluate_all_runs(
 
 
 def evaluate_subslices(split_type: str="test"):
+    """Subslice evaluation: Runs subslice evaluation over all experiments and stores the aggregated results"""
     runs_root = PATHS.runs
     save_dir = PATHS.results
     evaluate_all_runs(runs_root=runs_root, save_dir=save_dir, split_type=split_type)

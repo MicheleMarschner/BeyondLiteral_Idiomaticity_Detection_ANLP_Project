@@ -6,13 +6,15 @@ from typing import Dict, List, Tuple, Union, Sequence
 
 
 def make_freq_bins(freq: pd.Series) -> pd.Categorical:
-    
+    """Sort MWE frequency counts into coarse bins (1, 2–4, 5–9, …, 50+)"""
+
     edges = [1, 2, 5, 10, 20, 30, 50, 10**9]
     labels = ["1", "2-4", "5-9", "10-19", "20-29", "30-49", "50+"]
     return pd.cut(freq, bins=edges, labels=labels, right=False)
 
 
 def add_mwe_freq_bin_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """Adds per-row MWE frequency metadata about MWE token count and frequency bin it belongs to"""
     df = df.copy()
     mwe_counts = df["MWE"].value_counts()
     df["mwe_freq"] = df["MWE"].map(mwe_counts).astype(int)
@@ -21,6 +23,7 @@ def add_mwe_freq_bin_cols(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_freq_bin_summary(df_binned: pd.DataFrame) -> pd.DataFrame:
+    """Summarize idiom vs literal counts (and total) for each bin"""
     return (
         df_binned.groupby(["mwe_freq_bin", "label"])
             .size().unstack(fill_value=0)
@@ -37,10 +40,8 @@ def extract_freq_bin_ids(
     id_col: str = "ID",
     bin_col: str = "mwe_freq_bin",
 ) -> Dict[str, List[str]]:
-    """
-    Return IDs per frequency bin as simple lists (no language split).
-    Keys: "freqbin=1", "freqbin=2-4", ..., "freqbin=50+".
-    """
+    """Builds ID lists per frequency bin for slice evaluation"""
+
     if bin_col not in df.columns:
         raise ValueError(f"Missing '{bin_col}'. Run add_mwe_freq_bin_cols(df) first.")
 
@@ -51,17 +52,23 @@ def extract_freq_bin_ids(
 
 
 def top_k_mwe_per_lan(df: pd.DataFrame, lang: str):
-    
+    """Returns the most frequent MWEs for a given language (quick dataset bias check)"""
     res = df[df["Language"] == lang]["MWE"].value_counts().head(10).reset_index()
     res.columns = ["MWE", "count"]
 
     return res
 
 
-## Ambiguous MWE slice: a) present both as idiom + literal, b) max. 40/60
-# label mixture per (language, mwe) type
 def identify_potentially_ambiguous_mwe(df: pd.DataFrame, min_total: int=5) -> pd.DataFrame:
-
+    """
+    Identifies “ambiguous” MWEs and marks majority/minority instances
+    A (Language, MWE) is ambiguous if it appears at least `min_total` times and occurs
+    with both labels (idiom + literal). For each ambiguous (Language, MWE), instances
+    are labeled as:
+      - "minority" if their label is the rarer label for that MWE (within the language)
+      - "majority" otherwise
+    """
+    
     # per (Language, MWE) stats
     type_stats = (
         df.groupby(["Language", "MWE"])
@@ -118,7 +125,9 @@ def identify_potentially_ambiguous_mwe(df: pd.DataFrame, min_total: int=5) -> pd
 
 
 def build_slices_and_ids(df_raw: pd.DataFrame, *, min_total: int = 5) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
-
+    """
+    Builds all subslice annotations and the respective ID lists. Adds frequency-bin slices and ambiguity slices
+    """
     df = df_raw.copy()
     df["label"] = df["label"].astype(int)
 
@@ -140,10 +149,10 @@ def add_ambiguous_slices(
     random_state: int = 0,
 ) -> None:
     """
-    Adds/overwrites `slice_col` in csv, marking:
-      - rows with ID in hard_ids as "hard"
-      - a matched random control sample from the remaining rows as "control"
-        (matched on Language + mwe_freq_bin; requires those columns)
+    Writes an ambiguity slice ("hard"/"control") into a CSV.
+
+    Marks `hard_ids` as "hard". Then samples a matched "control" set from the remaining
+    examples, matched by Language and mwe_freq_bin
     """
     csv_path = Path(csv_path)
     df = pd.read_csv(csv_path)
@@ -184,6 +193,7 @@ def add_ambiguous_slices(
 
 
 def add_mwe_freq_bin_slice(target_csv: Union[str, Path], df: pd.DataFrame) -> None:
+    """Merges mwe_freq and mwe_freq_bin into an existing CSV by ID"""
     target_csv = Path(target_csv)
     df_target = pd.read_csv(target_csv)
 
@@ -201,6 +211,8 @@ def add_mwe_freq_bin_slice(target_csv: Union[str, Path], df: pd.DataFrame) -> No
 
 
 def add_subslices(path: Path, hard_ids, df_freq_bins: pd.DataFrame) -> None:
+    """Wrapper that adds both ambiguity slices (hard/control) and MWE frequency-bin columns"""
+    
     add_ambiguous_slices(csv_path=path, hard_ids=hard_ids)
     add_mwe_freq_bin_slice(target_csv=path, df=df_freq_bins)
 

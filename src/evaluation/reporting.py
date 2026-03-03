@@ -71,12 +71,14 @@ def save_artifacts(
     print(f"All files successfully written to {run_dir}")
 
 
-def extract_run_base(run_dir: Path) -> Dict[str, Any]:
-    exp_config = read_json(run_dir / "experiment_config.json")
+def extract_run_base(experiment_dir: Path) -> Dict[str, Any]:
+    """Extracts an experiment's configuration metadata for reporting tables"""
+
+    exp_config = read_json(experiment_dir / "experiment_config.json")
     input_variant = exp_config["input_variant"]
 
     return {
-        "run_dir": run_dir.name,
+        "run_dir": experiment_dir.name,
         "setting": exp_config.get("setting"),
         "language_mode": exp_config.get("language_mode"),
         "language": exp_config.get("language"),
