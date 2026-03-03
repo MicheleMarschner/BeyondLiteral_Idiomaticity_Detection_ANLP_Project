@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.config import PATHS
-from src.utils.helper import ensure_dir
+from config import PATHS
+from utils.helper import ensure_dir
 
 
 def _short(s: str) -> str:

@@ -1,10 +1,10 @@
 from pathlib import Path
 import pandas as pd
 
-from src.config import PATHS
-from src.evaluation.plots import plot_delta_bar, plot_en_pt_scatter, plot_heatmap_context_signal, plot_one_shot_gain
-from src.evaluation.reporting import ablation_delta, load_all_runs, view_per_signal
-from src.utils.helper import ensure_dir
+from config import PATHS
+from evaluation.plots import plot_delta_bar, plot_en_pt_scatter, plot_heatmap_context_signal, plot_one_shot_gain
+from evaluation.reporting import ablation_delta, load_all_runs, view_per_signal
+from utils.helper import ensure_dir
 
 
 def create_evaluation_tables_and_views() -> None:

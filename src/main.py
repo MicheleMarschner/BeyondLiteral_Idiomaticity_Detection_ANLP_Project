@@ -3,7 +3,8 @@ from pathlib import Path
 
 from experiments.run_experiments import run_experiments
 from config import PATHS
-from analysis import run_analysis
+from analysis.run_analysis import run_analysis
+from evaluation.run_evaluation import run_evaluation
 
 
 def main() -> None:
@@ -28,7 +29,7 @@ def main() -> None:
     if args.action == "evaluate":
         #if not args.arg1:
         #    raise SystemExit("evaluation requires arg1 = experiment_id")
-        run_analysis()
+        run_evaluation()
     #    return
     
 
@@ -36,8 +37,7 @@ def main() -> None:
         #if not args.split or not args.setting:
         #    parser.error("analyse requires --split and --setting. Example: analyse <arg1> --split test --setting zero_shot")
         
-        path = args.arg1 or PATHS.data_preprocessed
-        run_analysis(path=path, setting=args.setting, split_type=args.split)
+        run_analysis(setting=args.setting, split_type=args.split, project_paths=PATHS)
     
     
     

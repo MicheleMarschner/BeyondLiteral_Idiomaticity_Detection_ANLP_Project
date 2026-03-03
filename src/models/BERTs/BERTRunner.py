@@ -26,8 +26,10 @@ def tokenize_input(params, train_data, dev_data):
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
 
-    tokenizer_src = params.get("tokenizer_source", params["model_identifier"])
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_src)
+    tokenizer = AutoTokenizer.from_pretrained(params["model_identifier"])
+    specials = {"additional_special_tokens": ["<MWE>", "</MWE>"]}
+    tokenizer.add_special_tokens({"additional_special_tokens": ["<MWE>", "</MWE>"]})
+
     max_length = int(params["max_length"])
 
     train_dataset = train_dataset.map(
@@ -129,6 +131,7 @@ class BERTRunner:
             for learning_config in learning_grid:
                 set_seeds(config['seed'])
                 model = self.initialize(params={**learning_config, "model_identifier": model_id})
+                model.resize_token_embeddings(len(tokenizer))
                 
                 run_name = (
                     f"ml{tokenization_config['max_length']}"

@@ -1,9 +1,9 @@
 import pandas as pd
 
 from config import PATHS, Paths
-from src.analysis.create_subslices import add_ambiguous_slices, build_slices_and_ids
-from src.analysis.evaluate_subslices import subslice_evaluation
-from src.analysis.stress_masking import run_stress_masking_over_all_runs
+from analysis.create_subslices import add_ambiguous_slices, build_slices_and_ids
+from analysis.evaluate_subslices import subslice_evaluation
+from analysis.stress_masking import run_stress_masking_over_all_runs
 from utils.helper import copy_original_dataset, write_json
 
 
