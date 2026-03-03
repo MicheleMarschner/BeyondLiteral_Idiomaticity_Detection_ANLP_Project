@@ -186,7 +186,7 @@ def get_ids_by_pair(
     return matched[id_col].tolist()
 
 
-def copy_file(src_file: Path, dst_file: Path, overwrite: bool = False) -> Path:
+def copy_original_dataset(src_file: Path, dst_file: Path, overwrite: bool = False) -> Path:
     """Copy a dataset file to an analysis location"""
 
     if not src_file.exists():

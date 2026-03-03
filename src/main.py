@@ -7,7 +7,6 @@ from analysis.run_analysis import run_analysis
 from evaluation.run_evaluation import run_evaluation
 from utils.helper import ensure_dirs
 
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["train", "evaluate", "analyse"])

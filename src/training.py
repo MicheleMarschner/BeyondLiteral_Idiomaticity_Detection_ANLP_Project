@@ -1,7 +1,7 @@
 from torch import nn
 from pathlib import Path
 import joblib
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import (AutoModelForSequenceClassification, Trainer, TrainingArguments)
 
 import pandas as pd
 from typing import Dict, Union, Tuple, Any
@@ -49,12 +49,19 @@ def get_model(
             model = joblib.load(model_path)
         else:
             model = AutoModelForSequenceClassification.from_pretrained(model_path)
-            # tokenizer = AutoTokenizer.from_pretrained(model_path)
+            best_params["tokenizer_source"] = str(model_path)
+            model.eval()
 
             for p in model.parameters():
                 p.requires_grad = False
 
-            model.eval()
+            args = TrainingArguments(
+                output_dir=str(model_path),
+                per_device_eval_batch_size=int(best_params.get("batch_size", 8)),
+                report_to=["none"],
+            )
+
+            trainer = Trainer(model=model, args=args)
+
     
-    return model, best_params
-    
+    return trainer, best_params
