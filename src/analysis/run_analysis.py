@@ -2,7 +2,7 @@ import pandas as pd
 
 from config import PATHS, Paths
 from analysis.create_subslices import add_ambiguous_slices, build_slices_and_ids
-from analysis.evaluate_subslices import subslice_evaluation
+from analysis.evaluate_subslices import evaluate_subslices
 from analysis.stress_masking import run_stress_masking_over_all_runs
 from utils.helper import copy_original_dataset, write_json
 
@@ -30,7 +30,7 @@ def run_analysis(setting: str, split_type: str, project_paths: Paths = PATHS):
         write_json(slice_ids_path, slice_ids)
 
     #
-    subslice_evaluation(split_type="test")
+    evaluate_subslices(split_type="test")
     
     # perform mask stress test
     #run_stress_masking_over_all_runs(experiments_root, results_root)
