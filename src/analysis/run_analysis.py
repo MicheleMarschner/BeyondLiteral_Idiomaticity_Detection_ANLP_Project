@@ -1,8 +1,4 @@
 import pandas as pd
-import numpy as np
-from pathlib import Path
-
-from typing import Dict, List, Tuple, Union, Sequence
 
 from config import PATHS, Paths
 from analysis.evaluate_subslices import evaluate_subslices
@@ -33,5 +29,5 @@ def run_analysis(split_type: str, project_paths: Paths = PATHS):
             # save IDs json (contains both ambiguity + freqbin slices)
             write_json(slice_ids_path, slice_ids)
 
-    evaluate_subslices()
+    evaluate_subslices(split_type="test")
 
