@@ -25,20 +25,18 @@ def main() -> None:
         
         run_experiments(args.arg1, args.overwrite)
 
-    
     if args.action == "evaluate":
         #if not args.arg1:
         #    raise SystemExit("evaluation requires arg1 = experiment_id")
         run_evaluation()
     #    return
     
-
     if args.action == "analyse":
         #if not args.split or not args.setting:
         #    parser.error("analyse requires --split and --setting. Example: analyse <arg1> --split test --setting zero_shot")
         
-        run_analysis(setting=args.setting, split_type=args.split, project_paths=PATHS)
-    
+        project_paths = args.arg1 or PATHS
+        run_analysis(project_paths=project_paths, setting=args.setting, split_type=args.split)
     
     
 if __name__ == "__main__":
