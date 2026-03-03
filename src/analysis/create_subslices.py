@@ -4,10 +4,6 @@ from pathlib import Path
 
 from typing import Dict, List, Tuple, Union, Sequence
 
-from config import PATHS, Paths
-from analysis.evaluate_subslices import evaluate_subslices
-from utils.helper import copy_file, write_json
-
 
 def make_freq_bins(freq: pd.Series) -> pd.Categorical:
     
@@ -204,35 +200,7 @@ def add_mwe_freq_bin_slice(target_csv: Union[str, Path], df: pd.DataFrame) -> No
     df_out.to_csv(target_csv, index=False)
 
 
-
 def add_subslices(path: Path, hard_ids, df_freq_bins: pd.DataFrame) -> None:
     add_ambiguous_slices(csv_path=path, hard_ids=hard_ids)
     add_mwe_freq_bin_slice(target_csv=path, df=df_freq_bins)
-
-
-def create_dataset_for_analysis(data_path: Path, analysis_data_path: Path):
-    copy_file(data_path, analysis_data_path)
-
-
-def run_analysis(setting: str, split_type: str, project_paths: Paths = PATHS):
-    data_path = project_paths.data_preprocessed / f"{setting}_splits/{setting}_{split_type}.csv"
-    analysis_data_path = project_paths.data_analysis / f"{setting}_{split_type}_analysis.csv"
-    slice_ids_path = project_paths.data_analysis / f"{setting}_{split_type}_slice_ids.json"
-
-    df = pd.read_csv(data_path)
-
-    if not analysis_data_path.exists():
-        create_dataset_for_analysis(data_path, analysis_data_path)
-
-        df_with_slices, slice_ids = build_slices_and_ids(df, min_total=5)
-
-        # write updated columns back to the analysis CSV
-        df_with_slices.to_csv(analysis_data_path, index=False)
-
-        add_ambiguous_slices(csv_path=analysis_data_path, hard_ids=slice_ids["ambiguous_mwe_ids"])
-
-        # save IDs json (contains both ambiguity + freqbin slices)
-        write_json(slice_ids_path, slice_ids)
-
-    evaluate_subslices()
 
