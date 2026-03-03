@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Union, Sequence
 
 from config import PATHS, Paths
-from utils.helper import get_ids_by_pair, copy_file
+from utils.helper import get_ids_by_pair
 
 
 ## eda (check)

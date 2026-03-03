@@ -145,7 +145,7 @@ class LogisticRegression:
     
 
     def predict_proba(self, X: Any) -> np.ndarray:
-        """Computes predicted probabilities for the positive class"""
+        """Computes predicted probabilities for the literal class"""
         #score = np.dot(X, self.weights) + self.bias
         #return self._sigmoid(score)
         score = X @ self.weights
@@ -166,8 +166,8 @@ class LogRegRunner:
 
         featurizer = build_featurizer(config['model_family'], params)
         
-        X_train, y_train = train_df['Input'], train_df['Label'].astype(int)
-        X_test, y_test   = test_df['Input'],  test_df['Label'].astype(int)
+        X_train, y_train = train_df['input'], train_df['label'].astype(int) # changed label_col default to "label" according to the data files, was "Label" before
+        X_test, y_test   = test_df['input'],  test_df['label'].astype(int)  # changed label_col default to "label" according to the data files, was "Label" before
 
         X_train = featurizer.fit_transform(X_train)
         X_test  = featurizer.transform(X_test)
@@ -247,7 +247,7 @@ class LogRegRunner:
 
         bundle = {
             "model": best_model,                 # contains weights+bias
-            "featurizer": best_featurizer,       # crucial if you used TF-IDF / vocab
+            "featurizer": best_featurizer,
             "best_params": best_params,
             "threshold": threshold,
             "macro_f1": best_f1,
@@ -258,9 +258,11 @@ class LogRegRunner:
 
 
     def predict_proba(self, model: LogisticRegression, X: Any) -> np.ndarray:
-        """Wrapper to get positive-class probabilities from a model"""
+        """Wrapper to get literal-class probabilities from a model"""
         
         if isinstance(X, tuple) and len(X) >= 1:
             X = X[0]
 
-        return model.predict_proba(X)
+        proba_literal = model.predict_proba(X)
+
+        return proba_literal

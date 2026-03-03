@@ -10,27 +10,16 @@ class ExperimentTemplate:
     input_variant: List[Dict[str, Any]]
     model_families: List[str]
     seeds: List[int]
-'''
+
+
+
 EXPERIMENTS = ExperimentTemplate(
     settings=["zero_shot", "one_shot"],
-    language_mode="per_language",
-    languages=["EN"],
+    language_mode="multilingual",            # "cross_lingual", "multilingual" !TODO: if [] grid needs to be adapted
+    languages=["EN,PT,GL"],
     input_variant=[
-        {"context": "target", "include_mwe_segment": False, "transform": "none", "features": []},
-        {"context": "prev_target_next", "include_mwe_segment": False, "transform": "none", "features": ["ner"]},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []}
     ],
-    model_families=["logreg_tfidf", "logreg_word2vec"],
-    seeds=[51]
-)
-
-'''
-EXPERIMENTS = ExperimentTemplate(
-    settings=["zero_shot"],
-    language_mode="per_language",
-    languages=["EN"],
-    input_variant=[
-        {"context": "target", "include_mwe_segment": False, "transform": "none", "features": []},
-    ],
-    model_families=["logreg_word2vec"],
+    model_families=["logreg_tfidf"],
     seeds=[51]
 )

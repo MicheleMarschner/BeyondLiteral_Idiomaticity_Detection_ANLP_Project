@@ -26,6 +26,27 @@ tfidf_param_grid = {
 """
 
 word2vec_param_grid = {
+    "epochs": [10],
+    "negative": [5],
+    "window": [2],
+    "vector_size": [100],
+    "min_count": [2],
+    #"ngrams": [(1, 2), (2, 2)],                # ! TODO: brauchts ja eigentlich nicht oder?
+    "min_df": [1],
+    "max_df": [0.8],
+    "norm": ['l2'],
+    "max_features": [50000],
+    "smooth_idf": [True],
+    "sublinear_tf": [False],
+    "learning_rate": [0.5],
+    "num_iterations": [3000],
+    "lambda_reg": [0.0],  
+}
+
+
+
+'''
+word2vec_param_grid = {
     "epochs": [10, 50, 100],
     "negative": [5],
     "window": [2, 5, 10],
@@ -42,3 +63,4 @@ word2vec_param_grid = {
     "num_iterations": [3000, 5000],
     "lambda_reg": [0.0, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],  
 }
+'''

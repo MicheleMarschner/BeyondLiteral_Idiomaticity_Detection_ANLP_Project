@@ -4,7 +4,7 @@ import importlib.util
 
 from typing import Dict, Any
 
-from evaluation.metrics import compute_metrics, make_predictions
+from evaluation.metrics import compute_metrics, make_predictions, compute_metrics_per_language
 from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
 from evaluation.reporting import save_artifacts, build_test_predictions
 from training import get_model
@@ -77,9 +77,17 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
     test_proba = runner.predict_proba(model, test_loader)
     test_preds = make_predictions(test_proba)
 
-    test_predictions = build_test_predictions(test_data['ID'], test_preds, test_data['Label'], test_proba)
+    test_predictions = build_test_predictions(test_data['ID'], test_preds, test_data['label'], test_proba)
 
-    metrics = compute_metrics(test_data['Label'], test_preds)
+    if experiment_config["language_mode"] == "multilingual":
+        metrics = compute_metrics_per_language(
+            gold_labels=test_data["label"],
+            preds=test_preds,
+            languages=test_data["Language"],
+            threshold=0.5,
+        )
+    else:
+        metrics = compute_metrics(test_data["label"], test_preds)  # changed label_col default to "label" according to the data files, was "Label" before
 
     save_artifacts(
         run_dir=experiment_dir,
