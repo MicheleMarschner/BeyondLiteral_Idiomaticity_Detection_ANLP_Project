@@ -2,16 +2,10 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-
 from typing import Union, Sequence
 
 from config import PATHS, Paths
-from utils.helper import get_ids_by_pair
-
-
-## eda (check)
-## based on the eda create slices and make them permanent in data (in progress)
-## run over all experiments and create an ananylsis output (how, where) -> schreibe in results/table
+from utils.helper import copy_file, get_ids_by_pair
 
 
 def make_freq_bins(freq: pd.Series) -> pd.Categorical:
@@ -265,6 +259,3 @@ def run_analysis(setting: str, split_type: str, paths: Paths=PATHS):
         create_dataset_for_analysis(data_path, analysis_data_path)      # 
         hard_ids, df_freq_bins = identify_slices_for_analysis(df)
         add_subslices(analysis_data_path, hard_ids, df_freq_bins)
-        
-        ## eine .csv in der für alle experimente die Auswertung steht
-        ## dann aggregiere wieder über selbe variant und model_family (wohin?)
