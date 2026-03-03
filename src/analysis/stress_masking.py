@@ -10,26 +10,44 @@ from evaluation.metrics import compute_metrics, make_predictions
 from training import get_model
 
 
-def mask_mwe(
+def mask_first_occurrence(s: str, mwe: str, mask_token: str = "[MASK]") -> str:
+    # replaces first occurrence anywhere
+    return s.replace(mwe, mask_token, 1)
+
+def mask_last_occurrence(s: str, mwe: str, mask_token: str = "[MASK]") -> str:
+    # replaces last occurrence anywhere
+    i = s.rfind(mwe)
+    if i == -1:
+        return s
+    return s[:i] + mask_token + s[i + len(mwe):]
+
+def mask_all_occurrences(s: str, mwe: str, mask_token: str = "[MASK]") -> str:
+    # replaces all occurrences
+    return s.replace(mwe, mask_token)
+
+
+def apply_mask(
     df: pd.DataFrame,
+    variant: str,
     text_col: str = "input",
-    mwe_col: str = "mwe",
+    mwe_col: str = "MWE",
     mask_token: str = "[MASK]",
-    preserve_word_count: bool = True,
 ) -> pd.DataFrame:
-    new_df = df.copy()
+    out = df.copy()
+    texts = out[text_col].astype(str).tolist()
+    mwes = out[mwe_col].astype(str).tolist()
 
-    new_text = []
-    for s, mwe in zip(new_df[text_col].astype(str), new_df[mwe_col].astype(str)):
-        if preserve_word_count:
-            n = max(1, len(mwe.split()))
-            masked = " ".join([mask_token] * n)
-        else:
-            masked = mask_token
-        new_text.append(s.replace(mwe, masked, 1))
+    if variant == "first":
+        new_texts = [mask_first_occurrence(s, mwe, mask_token) for s, mwe in zip(texts, mwes)]
+    elif variant == "last":
+        new_texts = [mask_last_occurrence(s, mwe, mask_token) for s, mwe in zip(texts, mwes)]
+    elif variant == "both":
+        new_texts = [mask_all_occurrences(s, mwe, mask_token) for s, mwe in zip(texts, mwes)]
+    else:
+        raise ValueError(f"Unknown variant={variant}")
 
-    new_df[text_col] = new_text
-    return new_df
+    out[text_col] = new_texts
+    return out
 
 
 def stress_test_one_run(exp_dir: Path) -> Optional[Dict[str, Any]]:
@@ -45,23 +63,32 @@ def stress_test_one_run(exp_dir: Path) -> Optional[Dict[str, Any]]:
     # rebuild splits
     train_df, val_df, test_df = load_data_splits(experiment_config, PATHS.data_preprocessed)
     train_data, val_data, test_data = build_inputs_for_splits(train_df, val_df, test_df, experiment_config)
-        
+  
     # load saved model
     model, best_params = get_model(experiment_config, exp_dir, train_data, val_data, runner)
 
-    print("[DEBUG] tokenizer_source =", best_params.get("tokenizer_source"))
-
     # masked inference
-    masked_test = mask_mwe(test_data, mwe_col="MWE")
-    _, test_loader, _ = runner.prepare_features(
-        params=best_params,
-        config=experiment_config,
-        train_df=train_data,
-        test_df=masked_test,
-    )
-    proba_masked = runner.predict_proba(model, test_loader)
-    preds_masked= make_predictions(proba_masked)
-    metrics_masked = compute_metrics(masked_test["label"], preds_masked)
+    rows = []
+    for variant in ["first", "last", "both"]:
+        masked_test = apply_mask(test_data, variant=variant, text_col="input", mwe_col="MWE")
+
+        _, test_loader, _ = runner.prepare_features(
+            params=best_params,
+            config=experiment_config,
+            train_df=train_data,
+            test_df=masked_test,
+        )
+
+        proba = runner.predict_proba(model, test_loader)
+        preds = make_predictions(proba)
+        m = compute_metrics(masked_test["label"], preds)
+
+        rows.append({
+            "variant": variant,
+            "macro_f1_masked": m["macro_f1"],
+            "delta_macro_f1": float(m["macro_f1"] - metrics_normal["macro_f1"]),
+            "macro_f1_normal": metrics_normal["macro_f1"],
+        })
 
     res = {
         "run_name": exp_dir.name,
@@ -71,8 +98,7 @@ def stress_test_one_run(exp_dir: Path) -> Optional[Dict[str, Any]]:
         "model_family": experiment_config.get("model_family"),
         "seed": experiment_config.get("seed"),
         "normal": metrics_normal,
-        "masked": metrics_masked,
-        "delta_macro_f1": float(metrics_masked["macro_f1"] - metrics_normal["macro_f1"]),
+        "masked_variants": rows,
     }
     return res
 
@@ -90,23 +116,29 @@ def run_stress_masking_over_all_runs(experiments_root: Path, results_root: Path)
         if res is None:
             continue
 
+
         # save per-run artifact
         write_json(experiment_dir / "stress_masking.json", res)
 
-        all_rows.append({
+        base = {
+            "run_name": res["run_name"],
             "setting": res["setting"],
             "language_mode": res["language_mode"],
             "language": res["language"],
             "model_family": res["model_family"],
             "seed": res["seed"],
             "macro_f1_normal": res["normal"]["macro_f1"],
-            "macro_f1_masked": res["masked"]["macro_f1"],
-            "delta_macro_f1": res["delta_macro_f1"],
-        })
+        }
 
-        print(f"{experiment_dir.name}: Δmacro_f1={res['delta_macro_f1']:.4f}")
+        flat = base.copy()
+        for r in res["masked_variants"]:
+            v = r["variant"]
+            flat[f"macro_f1_{v}"] = r["macro_f1_masked"]
+            flat[f"delta_macro_f1_{v}"] = r["delta_macro_f1"]
 
-    df = pd.DataFrame(all_rows).sort_values("delta_macro_f1")
+        all_rows.append(flat)
+
+    df = pd.DataFrame(all_rows).sort_values("delta_macro_f1_both")
     
     save_path = results_root / "stress_masking_summary.csv"
     df.to_csv(save_path, index=False)
