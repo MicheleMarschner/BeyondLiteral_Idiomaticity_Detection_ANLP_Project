@@ -19,7 +19,6 @@ def tokenize_function(examples, tokenizer, max_length: int):
         padding="max_length",
         truncation=True,
         max_length=max_length,
-        return_overflowing_tokens=True,
     )
 
 
