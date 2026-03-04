@@ -61,7 +61,7 @@ def get_model(
                 report_to=["none"],
             )
 
-            trainer = Trainer(model=model, args=args)
+            model = Trainer(model=model, args=args)
 
     
-    return trainer, best_params
+    return model, best_params
