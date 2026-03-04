@@ -19,3 +19,4 @@ wandb/
 ./src/analysis
 ./src/models/logreg
 experiments
+evaluation.md
