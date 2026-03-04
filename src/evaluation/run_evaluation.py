@@ -11,7 +11,6 @@ def flatten_run(experiment_dir: Path) -> list[dict]:
 
     exp_config = read_json(experiment_dir / "experiment_config.json")
     metrics = read_json(experiment_dir / "metrics.json")
-
     base = extract_run_base(experiment_dir)
 
     rows = []
