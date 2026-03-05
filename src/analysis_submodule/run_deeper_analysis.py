@@ -3,7 +3,7 @@ from pathlib import Path
 from analysis.evaluate_subslices import evaluate_subslices
 from analysis_submodule.stress_masking import run_stress_masking_over_all_runs
 from evaluation.run_evaluation import run_evaluation
-from analysis_submodule.main_analysis import baseline_overview_table, context_signal_grouped_language_table, plot_context_connected_points, plot_context_impact_slope, plot_context_variant_heatmaps_per_model, plot_en_pt_gap_barplot, plot_en_pt_scatter_per_family, plot_performance_heatmap
+from analysis_submodule.main_analysis import baseline_overview_table, context_signal_grouped_language_table, plot_context_connected_points, plot_context_impact_slope, plot_context_variant_heatmaps_per_model, plot_en_pt_gap_barplot, plot_one_shot_gains_baseline, plot_performance_heatmap
 from analysis_submodule.slice_analysis import compute_hard_control_gap_all_runs, hard_control_gap_for_run, plot_hard_control_gap_aggregated
 from utils.helper import ensure_dir
 from analysis_submodule.utils.helper import load_results_overviews,  save_multicol_latex
@@ -30,24 +30,20 @@ def run_deeper_analysis(experiments_root, results_root):
     
     plot_en_pt_gap_barplot(master_df, plots_path, setting="zero_shot")
 
+    
+
     for mf in sorted(master_df["model_family"].dropna().unique()):
+        plot_one_shot_gains_baseline(master_df, plots_path, model_family=mf)
         plot_context_connected_points(master_df, plots_path, setting="zero_shot", model_family=mf)
         plot_context_variant_heatmaps_per_model(master_df, plots_path, setting="zero_shot", model_family=mf)
         plot_performance_heatmap(master_df, plots_path, model_family=mf)
         plot_context_impact_slope(master_df, plots_path, model_family=mf)
-        #plot_one_shot_gains_baseline(master_df, plots_path, model_family=mf)
 
     ###############################################
 
     hard_control_gap_for_run(slices_df, run_dir="zero_shot__EN__previous_target_next_True_highlight_ner__mBERT__seed51")
     gaps = compute_hard_control_gap_all_runs(slices_df)
     plot_hard_control_gap_aggregated(gaps, save_path=plots_path / "rq2__hard_control_gap__aggregated.png")
-
-    plot_en_pt_scatter_per_family(
-        master_df,
-        plots_path
-    )
-
     
     # create plots
     #plot_masking_df_masking_deltas_bar(masking_df, master_df, plots_dir / "rq1rq2_masking_df_deltas_bar.png")

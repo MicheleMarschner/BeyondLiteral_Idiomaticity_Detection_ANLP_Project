@@ -2,9 +2,9 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from analysis import evaluate_subslices
+from analysis.evaluate_subslices import evaluate_subslices
 from analysis_submodule.stress_masking import run_stress_masking_over_all_runs
-from evaluation import run_evaluation
+from evaluation.run_evaluation import run_evaluation
 from utils.helper import read_csv_data
 
 
@@ -128,7 +128,7 @@ def save_grid(grid, out_path: Path) -> None:
 def load_results_overviews(experiments_root, results_root, results_sub_dir, split_type="test"):
     master_csv_path = results_root / "master_metrics_long.csv"
     if not master_csv_path.exists():
-        run_evaluation(split_type=split_type)
+        run_evaluation()
     master_df = read_csv_data(master_csv_path)
 
     slice_csv_path = results_root / "slices_overview.csv"
@@ -146,7 +146,7 @@ def load_results_overviews(experiments_root, results_root, results_sub_dir, spli
 
 
 
-def prepare_neutral_master(master_df: pd.DataFrame, *, setting: str = "zero_shot") -> pd.DataFrame:
+def prepare_baseline_master(master_df: pd.DataFrame, *, setting: str = "zero_shot") -> pd.DataFrame:
     """
     Prepare a clean neutral view of the master table:
     - zero-shot only (default)
@@ -160,6 +160,31 @@ def prepare_neutral_master(master_df: pd.DataFrame, *, setting: str = "zero_shot
     # enforce language order for plotting
     df["eval_language"] = pd.Categorical(df["eval_language"], categories=[l for l in LANG_ORDER if l in set(df["eval_language"])], ordered=True)
 
+    return df
+
+
+def prepare_master_for_settings(
+    master_df: pd.DataFrame,
+    settings: list[str],
+    include_mwe_segment: bool = True,
+) -> pd.DataFrame:
+    """
+    Prepare master for plots that compare multiple settings (e.g., zero_shot vs one_shot).
+    Adds variant + context_label + Joint if missing.
+    """
+    df = master_df.copy()
+    df = df[df["setting"].isin(settings)].copy()
+    df = df[df["include_mwe_segment"] == include_mwe_segment].copy()
+
+    df = normalize_variant(df)
+    df = normalize_context(df)
+    df = add_joint_language(df)
+
+    df["eval_language"] = pd.Categorical(
+        df["eval_language"],
+        categories=[l for l in LANG_ORDER if l in set(df["eval_language"])],
+        ordered=True
+    )
     return df
 
 

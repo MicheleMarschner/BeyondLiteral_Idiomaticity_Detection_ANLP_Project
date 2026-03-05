@@ -78,10 +78,10 @@ def extract_run_base(experiment_dir: Path) -> Dict[str, Any]:
     input_variant = exp_config["input_variant"]
 
     return {
-        "run_dir": experiment_dir.name,
+        "run_dir": str(experiment_dir.name).replace(",", "_"),
         "setting": exp_config.get("setting"),
         "language_mode": exp_config.get("language_mode"),
-        "language": exp_config.get("language"),
+        "language": str(exp_config.get("language")).replace(",", "_"),
         "model_family": exp_config.get("model_family"),
         "seed": exp_config.get("seed"),
         "context": input_variant.get("context"),

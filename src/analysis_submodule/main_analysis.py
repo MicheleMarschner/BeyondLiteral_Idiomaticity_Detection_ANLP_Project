@@ -13,7 +13,7 @@ import seaborn as sns
 from analysis_submodule.utils.helper import (
     CONTEXT_ORDER, LANG_ORDER, METRIC_ORDER, VARIANT_ORDER, 
     add_joint_language, normalize_context, normalize_variant, 
-    prepare_neutral_master, save_plot
+    prepare_baseline_master, prepare_master_for_settings, save_plot
 )
 
 
@@ -30,7 +30,7 @@ def baseline_overview_table(master_df: pd.DataFrame) -> pd.DataFrame:
         (df["features"].fillna("").astype(str).str.lower().isin(["", "empty"]))
     ].copy()
 
-    df["eval_language"] = df["eval_language"].astype(str).str.strip().replace({"overall": "joint"})
+    df["eval_language"] = df["eval_language"].astype(str).str.strip().replace({"overall": "Joint"})
 
     # aggregate
     agg = (
@@ -43,11 +43,11 @@ def baseline_overview_table(master_df: pd.DataFrame) -> pd.DataFrame:
     if "joint" not in set(agg["eval_language"]):
         base = agg[agg["eval_language"].isin(["EN", "PT"])].copy()
         joint = base.groupby("model_family")["macro_f1"].mean().reset_index()
-        joint["eval_language"] = "joint"
+        joint["eval_language"] = "Joint"
         agg = pd.concat([agg, joint], ignore_index=True)
 
     tab = agg.pivot(index="model_family", columns="eval_language", values="macro_f1")
-    tab = tab[[c for c in ["EN", "PT", "joint"] if c in tab.columns]]
+    tab = tab[[c for c in ["EN", "PT", "Joint"] if c in tab.columns]]
 
     # MultiIndex columns: macro-F1 over EN/PT/joint
     tab.columns = pd.MultiIndex.from_product([["macro-F1"], tab.columns.tolist()])
@@ -139,13 +139,15 @@ def plot_context_connected_points(
     model_family: str,
     setting: str = "zero_shot",
     include_mwe_segment: bool = True,
-    languages: list[str] = ("EN", "PT", "joint"),
+    languages: list[str] = ("EN", "PT", "Joint"),
     metric: str = "macro_f1",
 ) -> None:
     '''
     Connected points: x=context_label (Target, Full), y=macro_f1, hue=variant, facet by language.
     '''
-    df = prepare_neutral_master(master_df)
+    df = prepare_baseline_master(master_df)
+
+    df.to_csv(save_dir/"master.csv")
 
     q = df[
         (df["setting"] == setting)
@@ -191,11 +193,11 @@ def plot_context_impact_slope(
     Connected points plot comparing Full vs Target for each variant.
     Facets: rows=language, cols=model_family.
     '''
-    df = prepare_neutral_master(master_df, setting=setting)
+    df = prepare_baseline_master(master_df, setting=setting)
 
 
     if languages is None:
-        languages = [l for l in ["EN", "PT", "joint"] if l in set(df["eval_language"].astype(str))]
+        languages = [l for l in ["EN", "PT", "Joint"] if l in set(df["eval_language"].astype(str))]
 
     plot_df = df[df["eval_language"].astype(str).isin(languages)].copy()
     plot_df["variant"] = pd.Categorical(plot_df["variant"], categories=VARIANT_ORDER, ordered=True)
@@ -239,7 +241,7 @@ def plot_context_variant_heatmaps_per_model(
     For each model_family: draw one heatmap per eval_language.
     Heatmap axes: rows=context (Full/Target), cols=variant, value=macro-F1.
     '''
-    df = prepare_neutral_master(master_df, setting=setting)
+    df = prepare_baseline_master(master_df, setting=setting)
 
     if languages is None:
         languages = [l for l in ["EN", "PT", "joint"] if l in set(df["eval_language"].astype(str))]
@@ -290,7 +292,7 @@ def plot_performance_heatmap(
     '''
     Heatmap: rows=variant, cols=(language × context_label), values=macro_f1.
     '''
-    df = prepare_neutral_master(master_df)
+    df = prepare_baseline_master(master_df)
 
     q = df[
         (df["setting"] == setting)
@@ -341,9 +343,9 @@ def plot_performance_heatmap(
 def plot_one_shot_gains_baseline(
     master_df: pd.DataFrame,
     save_dir: Path,
-    model_family: str,
+    model_family: str = "mBERT",
     include_mwe_segment: bool = True,
-    languages: list[str] = ("EN", "PT", "joint"),
+    languages: list[str] = ("EN", "PT", "Joint"),
     metric: str = "macro_f1",
 ) -> None:
     """
@@ -351,7 +353,7 @@ def plot_one_shot_gains_baseline(
     - variant=Standard
     - context=Full Context
     """
-    df = prepare_neutral_master(master_df)
+    df = prepare_master_for_settings(master_df, settings=["zero_shot", "one_shot"])
 
     q = df[
         (df["setting"].isin(["zero_shot", "one_shot"]))
@@ -359,14 +361,14 @@ def plot_one_shot_gains_baseline(
         & (df["model_family"] == model_family)
         & (df["language"].astype(str).isin(list(languages)))
         & (df["variant"] == "Standard")
-        & (df["context_label"] == "Full Context")
+        & (df["context_label"] == "Full")
     ].copy()
 
     if q.empty:
         print(f"[one-shot] No baseline rows for model_family={model_family}")
         return
 
-    fig, ax = plt.figure(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(7, 5))
     sns.barplot(
         data=q,
         x="language",
@@ -379,36 +381,13 @@ def plot_one_shot_gains_baseline(
     for container in ax.containers:
         ax.bar_label(container, fmt="%.3f", padding=3)
 
-    ax.set_title(f"Impact of One-Shot Training (Standard + Full) — {model_family}", fontsize=12)
+    ax.set_title(f"Impact of One-Shot Training (Baseline) — {model_family}", fontsize=12)
     ax.set_ylabel("Macro F1")
     ax.set_ylim(0, 1.05)
-    ax.set_legend(title="Setting", loc="upper left")
+    ax.legend(title="Setting", loc="upper left")
 
-    file_path = save_dir / "zero_vs_one.png"
+    file_path = save_dir / "zero_vs_one_baseline.png"
     save_plot(fig, file_path)
-
-
-def plot_one_shot_gain(
-    one_shot_delta: pd.DataFrame,
-    save_dir: Path,
-    eval_language: str,
-) -> None:
-    q = one_shot_delta[one_shot_delta["eval_language"] == eval_language].copy()
-    if q.empty:
-        return
-
-    keep = ["language_mode", "language", "model_family", "context", "features", "transform", "include_mwe_segment"]
-    keep = [c for c in keep if c in q.columns]
-    q["label"] = q[keep].astype(str).agg(" | ".join, axis=1)
-    q = q.sort_values("delta", ascending=False)
-
-    fig, ax = plt.subplots(figsize=(10, max(3, 0.35 * len(q))))
-    ax.barh(q["label"], q["delta"])
-    ax.axvline(0.0, linewidth=1)
-    ax.set_title(f"One-shot gain: one_shot − zero_shot (eval={eval_language})")
-    ax.set_xlabel("Δ macro_f1")
-
-    save_plot(fig, save_dir)
 
 
 
@@ -429,7 +408,7 @@ def plot_en_pt_gap_barplot(
     Barplot of EN–PT gap per variant and context: gap = F1_EN - F1_PT.
     Facet by model_family. Hue = context (Full/Target).
     '''
-    df = prepare_neutral_master(master_df, setting=setting)
+    df = prepare_baseline_master(master_df, setting=setting)
 
     # We need EN and PT present
     need = {"EN", "PT"}
