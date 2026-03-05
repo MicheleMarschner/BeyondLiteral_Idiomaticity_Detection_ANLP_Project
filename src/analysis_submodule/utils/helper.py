@@ -147,23 +147,6 @@ def load_results_overviews(experiments_root, results_root, results_sub_dir, spli
     return master_df, slices_df, masking_df
 
 
-def prepare_baseline_master(master_df: pd.DataFrame, *, setting: str = "zero_shot") -> pd.DataFrame:
-    """
-    Prepare a clean neutral view of the master table:
-    - zero-shot only (default)
-    - adds 'variant' (transform+features), 'context_label' (Full/Target), and 'joint' language if missing
-    """
-    df = filter_baseline(master_df, setting=setting, include_mwe_segment=True)
-    df = normalize_variant(df)
-    df = normalize_context(df)
-    df = add_joint_language(df)
-
-    # enforce language order for plotting
-    df["eval_language"] = pd.Categorical(df["eval_language"], categories=[l for l in LANG_ORDER if l in set(df["eval_language"])], ordered=True)
-
-    return df
-
-
 def prepare_master_for_settings(
     master_df: pd.DataFrame,
     settings: list[str],

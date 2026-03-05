@@ -12,6 +12,7 @@ That’s defensible and linguist-aligned (type inventory control).
 import pandas as pd
 from pathlib import Path
 
+
 def load_and_prepare_meta(meta_csv: Path, *, id_col="id", mwe_col="mwe", lang_col="language"):
     meta = pd.read_csv(meta_csv)
     meta[id_col] = meta[id_col].astype(str).str.strip()
@@ -20,6 +21,7 @@ def load_and_prepare_meta(meta_csv: Path, *, id_col="id", mwe_col="mwe", lang_co
     if mwe_col in meta.columns: keep.append(mwe_col)
     if lang_col in meta.columns: keep.append(lang_col)
     return meta[keep].copy()
+
 
 def merge_mwe_into_overview(
     overview: pd.DataFrame,

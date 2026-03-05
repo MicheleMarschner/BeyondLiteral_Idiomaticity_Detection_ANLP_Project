@@ -15,7 +15,6 @@ def rq2_plot_stress_scatter(
     df_stress: pd.DataFrame,
     df_base: pd.DataFrame,
     out_path: Path,
-    *,
     metric_x: str = "macro_f1_normal",
     metric_y: str = "macro_f1_both",
     hue: str = "setting",

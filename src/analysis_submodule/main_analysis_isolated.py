@@ -13,10 +13,8 @@ import seaborn as sns
 from analysis_submodule.utils.helper import (
     CONTEXT_ORDER, LANG_ORDER, METRIC_ORDER, VARIANT_ORDER, 
     add_joint_language, normalize_context, normalize_variant, 
-    prepare_baseline_master, prepare_master_for_settings, save_plot
+    prepare_master_for_settings, prepare_master_with_regime, save_plot
 )
-
-
 
 def baseline_overview_table(master_df: pd.DataFrame) -> pd.DataFrame:
     df = master_df.copy()
@@ -136,24 +134,29 @@ def context_signal_grouped_language_table(
 def plot_context_connected_points(
     master_df: pd.DataFrame,
     save_dir: Path,
-    model_family: str,
+    model_family: str = "mBERT",
+    regime: str = "isolated",
     setting: str = "zero_shot",
     include_mwe_segment: bool = True,
-    languages: list[str] = ("EN", "PT", "Joint"),
+    eval_languages: list[str] = ("EN", "PT", "Joint"),
+    train_lang_joint: str = "EN_PT_GL",
     metric: str = "macro_f1",
 ) -> None:
     '''
-    Connected points: x=context_label (Target, Full), y=macro_f1, hue=variant, facet by language.
+    Connected points
     '''
-    df = prepare_baseline_master(master_df)
-
-    df.to_csv(save_dir/"master.csv")
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=tuple(eval_languages),
+    )
 
     q = df[
-        (df["setting"] == setting)
-        & (df["include_mwe_segment"] == include_mwe_segment)
-        & (df["model_family"] == model_family)
-        & (df["language"].astype(str).isin(list(languages)))
+        (df["regime"] == regime) &
+        (df["eval_language"].astype(str).isin(list(eval_languages)))
     ].copy()
 
     if q.empty:
@@ -179,27 +182,38 @@ def plot_context_connected_points(
     save_plot(grid.fig, file_path)
    
 
-
 def plot_context_impact_slope(
     master_df: pd.DataFrame,
     save_dir: Path,
     setting: str = "zero_shot",
-    languages: list[str] | None = None,
+    model_family: str = "mBERT",
+    regime: str = "isolated",
+    eval_languages: list[str] | None = None,
+    train_lang_joint: str = "EN_PT_GL",
+    include_mwe_segment: bool = True,
     height: float = 3.2,
-    aspect: float = 1.3,
-    model_family: str = "mBERT"
+    aspect: float = 1.3
 ) -> None:
     '''
     Connected points plot comparing Full vs Target for each variant.
     Facets: rows=language, cols=model_family.
     '''
-    df = prepare_baseline_master(master_df, setting=setting)
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=("EN", "PT", "GL", "Joint"),
+    )
+
+    plot_df = df[df["regime"] == regime].copy()
+
+    if eval_languages is None:
+        eval_languages = [l for l in ["EN", "PT", "GL", "Joint"] if l in set(plot_df["eval_language"].astype(str))]
 
 
-    if languages is None:
-        languages = [l for l in ["EN", "PT", "Joint"] if l in set(df["eval_language"].astype(str))]
-
-    plot_df = df[df["eval_language"].astype(str).isin(languages)].copy()
+    plot_df = df[df["eval_language"].astype(str).isin(eval_languages)].copy()
     plot_df["variant"] = pd.Categorical(plot_df["variant"], categories=VARIANT_ORDER, ordered=True)
 
     # Connected points: seaborn point plot connects by default when x is categorical.
@@ -225,6 +239,8 @@ def plot_context_impact_slope(
     save_plot(grid.fig, file_path)
 
 
+
+
 # -----------------------------------------------------------------------------
 # RQ3: Heatmap (context × variant) — per model_family
 # -----------------------------------------------------------------------------
@@ -233,106 +249,116 @@ def plot_context_variant_heatmaps_per_model(
     master_df: pd.DataFrame,
     save_dir: Path,
     setting: str = "zero_shot",
-    languages: list[str] | None = None,
+    model_family: str = "mBERT",
+    include_mwe_segment: bool = True,
+    regime: str = "isolated",
+    eval_languages: list[str] | None = None,
+    train_lang_joint: str = "EN_PT_GL",
     figsize: tuple[int, int] = (7, 2),
-    model_family: str = "mBERT"
 ) -> None:
     '''
     For each model_family: draw one heatmap per eval_language.
     Heatmap axes: rows=context (Full/Target), cols=variant, value=macro-F1.
     '''
-    df = prepare_baseline_master(master_df, setting=setting)
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=("EN", "PT", "GL", "Joint"),
+    )
 
-    if languages is None:
-        languages = [l for l in ["EN", "PT", "joint"] if l in set(df["eval_language"].astype(str))]
+    df = df[df["regime"] == regime].copy()
+    if df.empty:
+        print(f"[heatmap] No data for model_family={model_family}, regime={regime}, setting={setting}")
+        return
+
+    if eval_languages is None:
+        eval_languages = [l for l in ["EN", "PT", "GL", "Joint"] if l in set(df["eval_language"].astype(str))]
 
     df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
     df["context_label"] = pd.Categorical(df["context_label"], categories=CONTEXT_ORDER, ordered=True)
+    
+    for lang in eval_languages:
+        sub = df[df["eval_language"].astype(str) == lang].copy()
+        if sub.empty:
+            continue
 
-    for mf in sorted(df["model_family"].dropna().unique()):
-        sub_m = df[df["model_family"] == mf].copy()
+        heat = sub.pivot_table(
+            index="context_label",
+            columns="variant",
+            values="macro_f1",
+            aggfunc="first",
+        ).reindex(index=CONTEXT_ORDER)
 
-        for lang in languages:
-            sub = sub_m[sub_m["eval_language"].astype(str) == lang].copy()
-            if sub.empty:
-                continue
+        fig, ax = plt.subplots(figsize=figsize)
+        sns.heatmap(
+            heat,
+            annot=True,
+            fmt=".3f",
+            cbar=True,
+            linewidths=0.5,
+        )
+        ax.set_title(f"{model_family} | {lang} | macro-F1 (zero-shot)")
+        ax.set_xlabel("Variant")
+        ax.set_ylabel("Context")
 
-            heat = sub.pivot_table(
-                index="context_label",
-                columns="variant",
-                values="macro_f1",
-                aggfunc="first",
-            ).reindex(index=CONTEXT_ORDER)
-
-            fig, ax = plt.subplots(figsize=figsize)
-            sns.heatmap(
-                heat,
-                annot=True,
-                fmt=".3f",
-                cbar=True,
-                linewidths=0.5,
-            )
-            ax.set_title(f"{model_family} | {lang} | macro-F1 (zero-shot)")
-            ax.set_xlabel("Variant")
-            ax.set_ylabel("Context")
-
-            file_path = save_dir / f"heatmap__{model_family}__{lang}__zero_shot.png"
-            save_plot(fig, file_path)
+        file_path = save_dir / f"heatmap__{model_family}__{lang}__zero_shot.png"
+        save_plot(fig, file_path)
 
 
 def plot_performance_heatmap(
     master_df: pd.DataFrame,
     save_dir: Path,
-    model_family: str,
     setting: str = "zero_shot",
+    model_family: str = "mBERT",
     include_mwe_segment: bool = True,
-    languages: list[str] = ("EN", "PT", "Joint"),
+    regime: str = "isolated",
+    train_lang_joint: str = "EN_PT_GL",
+    eval_languages: list[str] = ("EN", "PT", "Joint"),
     metric: str = "macro_f1",
 ) -> None:
     '''
     Heatmap: rows=variant, cols=(language × context_label), values=macro_f1.
     '''
-    df = prepare_baseline_master(master_df)
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=("EN", "PT", "GL", "Joint"),
+    )
+    df = df[df["regime"] == regime].copy()
+    df = df[df["eval_language"].astype(str).isin(list(eval_languages))].copy()
 
-    q = df[
-        (df["setting"] == setting)
-        & (df["include_mwe_segment"] == include_mwe_segment)
-        & (df["model_family"] == model_family)
-        & (df["language"].astype(str).isin(list(languages)))
-    ].copy()
-
-    if q.empty:
-        print(f"[heatmap] No data for model_family={model_family}, setting={setting}")
+    if df.empty:
+        print(f"[heatmap] No data for model_family={model_family}, regime={regime}, setting={setting}")
         return
 
-    pivot = q.pivot_table(
+    pivot = df.pivot_table(
         index="variant",
-        columns=["language", "context_label"],
+        columns=["eval_language", "context_label"],
         values=metric,
         aggfunc="mean",
     )
 
     # enforce column order
     new_cols = []
-    for lang in languages:
+    for lang in eval_languages:
         for ctx in CONTEXT_ORDER:
             if (lang, ctx) in pivot.columns:
                 new_cols.append((lang, ctx))
     pivot = pivot.reindex(columns=pd.MultiIndex.from_tuples(new_cols, names=pivot.columns.names))
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    sns.heatmap(
-        pivot,
-        annot=True,
-        fmt=".3f",
-        linewidths=0.5,
-        cbar_kws={"label": "Macro F1"},
-    )
-    ax.set_title(f"{model_family} {setting}: Features vs Context", fontsize=13)
+    sns.heatmap(pivot, annot=True, fmt=".3f", linewidths=0.5, cbar_kws={"label": "Macro F1"}, ax=ax)
+    ax.set_title(f"{model_family} | {regime} | {setting}: Variant × Context", fontsize=13)
     ax.set_ylabel("Input Variant")
-    ax.set_xlabel("Language / Context")
+    ax.set_xlabel("Eval language / Context")
 
-    file_path = save_dir / f"heatmap__{model_family}__zero_shot.png"
+    file_path = save_dir / f"heatmap__{model_family}__{setting}__{regime}.png"
     save_plot(fig, file_path)
 
 
@@ -343,9 +369,12 @@ def plot_performance_heatmap(
 def plot_one_shot_gains_baseline(
     master_df: pd.DataFrame,
     save_dir: Path,
+    setting: str = "zero_shot",
     model_family: str = "mBERT",
     include_mwe_segment: bool = True,
-    languages: list[str] = ("EN", "PT", "Joint"),
+    regime: str = "isolated",
+    train_lang_joint: str = "EN_PT_GL",
+    eval_languages: list[str] = ("EN", "PT", "Joint"),
     metric: str = "macro_f1",
 ) -> None:
     """
@@ -354,39 +383,47 @@ def plot_one_shot_gains_baseline(
     - context=Full Context
     """
     df = prepare_master_for_settings(master_df, settings=["zero_shot", "one_shot"])
+    df["language"] = df["language"].astype(str).str.strip().str.replace(" ", "", regex=False)
+
+    # apply same regime logic
+    is_iso = (df["language_mode"] == "per_language") & (df["language"] == df["eval_language"])
+    is_joint = (df["language_mode"] == "multilingual") & (df["language"] == train_lang_joint)
+    if regime == "isolated":
+        df = df[is_iso].copy()
+    else:
+        df = df[is_joint].copy()
 
     q = df[
-        (df["setting"].isin(["zero_shot", "one_shot"]))
-        & (df["include_mwe_segment"] == include_mwe_segment)
+        (df["include_mwe_segment"] == include_mwe_segment)
         & (df["model_family"] == model_family)
-        & (df["language"].astype(str).isin(list(languages)))
+        & (df["eval_language"].astype(str).isin(list(eval_languages)))
         & (df["variant"] == "Standard")
         & (df["context_label"] == "Full")
     ].copy()
 
     if q.empty:
-        print(f"[one-shot] No baseline rows for model_family={model_family}")
+        print(f"[one-shot] No baseline rows for model_family={model_family}, regime={regime}")
         return
 
     fig, ax = plt.subplots(figsize=(7, 5))
     sns.barplot(
         data=q,
-        x="language",
+        x="eval_language",
         y=metric,
         hue="setting",
         edgecolor="black",
-        order=[l for l in LANG_ORDER if l in set(q["language"].astype(str))],
+        order=[l for l in eval_languages if l in set(q["eval_language"].astype(str))],
+        ax=ax,
     )
-
     for container in ax.containers:
         ax.bar_label(container, fmt="%.3f", padding=3)
 
-    ax.set_title(f"Impact of One-Shot Training (Baseline) — {model_family}", fontsize=12)
+    ax.set_title(f"One-Shot Gain (Baseline) — {model_family} | {regime}", fontsize=12)
     ax.set_ylabel("Macro F1")
     ax.set_ylim(0, 1.05)
     ax.legend(title="Setting", loc="upper left")
 
-    file_path = save_dir / "zero_vs_one_baseline.png"
+    file_path = save_dir / f"zero_vs_one_baseline__{model_family}__{regime}.png"
     save_plot(fig, file_path)
 
 
@@ -400,29 +437,41 @@ def plot_en_pt_gap_barplot(
     master_df: pd.DataFrame,
     save_dir: Path,
     setting: str = "zero_shot",
+    model_family: str = "mBERT",
+    include_mwe_segment: bool = True,
+    regime: str = "isolated",
+    train_lang_joint: str = "EN_PT_GL",
     height: float = 3.2,
-    aspect: float = 1.5,
-    model_family: str = "mBERT"
+    aspect: float = 1.5
 ) -> None:
     '''
     Barplot of EN–PT gap per variant and context: gap = F1_EN - F1_PT.
     Facet by model_family. Hue = context (Full/Target).
     '''
-    df = prepare_baseline_master(master_df, setting=setting)
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=("EN", "PT"),
+    )
+    df = df[df["regime"] == regime].copy()
 
-    # We need EN and PT present
-    need = {"EN", "PT"}
-    have = set(df["eval_language"].astype(str).unique())
-    if not need.issubset(have):
-        raise ValueError(f"Need both EN and PT in eval_language for gap plot. Have: {sorted(have)}")
+    if df.empty:
+        print(f"[gap] No data for model_family={model_family}, regime={regime}, setting={setting}")
+        return
 
-    # wide: EN/PT per (model_family, variant, context)
     wide = df.pivot_table(
-        index=["model_family", "variant", "context_label"],
+        index=["variant", "context_label"],
         columns="eval_language",
         values="macro_f1",
-        aggfunc="first",
+        aggfunc="mean",
     ).reset_index()
+
+    if "EN" not in wide.columns or "PT" not in wide.columns:
+        print("[gap] Need both EN and PT to compute gap.")
+        return
 
     wide["gap_en_minus_pt"] = wide["EN"] - wide["PT"]
     wide["variant"] = pd.Categorical(wide["variant"], categories=VARIANT_ORDER, ordered=True)
@@ -434,7 +483,6 @@ def plot_en_pt_gap_barplot(
         x="variant",
         y="gap_en_minus_pt",
         hue="context_label",
-        col="model_family",
         height=height,
         aspect=aspect,
     )
@@ -443,8 +491,76 @@ def plot_en_pt_gap_barplot(
         ax.tick_params(axis="x", rotation=30)
 
     grid.set_axis_labels("Variant", "Gap (EN − PT) macro-F1")
-    grid.set_titles("{col_name}")
-    
-    file_path = save_dir / f"barplot_EN_PT_gap_{model_family}.png"
+    grid.fig.suptitle(f"EN–PT Gap — {model_family} | {regime} | {setting}", y=1.02)
+
+    file_path = save_dir / f"barplot_EN_PT_gap__{model_family}__{regime}.png"
     save_plot(grid.fig, file_path)
 
+
+
+
+def plot_f1_over_variants_4lines(
+    master_df: pd.DataFrame,
+    save_path: Path,
+    model_family: str,
+    regime: str = "isolated",              
+    train_lang_joint: str = "EN_PT_GL",    
+    setting: str = "zero_shot",
+    include_mwe_segment: bool = True,
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+    metric: str = "macro_f1",
+) -> pd.DataFrame:
+    """
+    4 lines total:
+      color = eval_language (EN/PT)
+      style = context_label (Full/Target)
+      x = variant
+    Filtered to ONE regime to avoid mixing isolated/joint.
+    """
+    df = prepare_master_with_regime(
+        master_df,
+        setting=setting,
+        model_family=model_family,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,  # only EN/PT here
+    )
+
+    df = df[df["regime"] == regime].copy()
+    if df.empty:
+        raise ValueError(f"No rows after filtering for regime={regime}. Check train_lang_joint / language_mode tags.")
+
+    # aggregate over seeds (and any duplicates)
+    agg = (
+        df.groupby(["eval_language", "context_label", "variant"], dropna=False)[metric]
+        .mean()
+        .reset_index()
+    )
+
+    agg["variant"] = pd.Categorical(agg["variant"], categories=VARIANT_ORDER, ordered=True)
+    agg["context_label"] = pd.Categorical(agg["context_label"], categories=CONTEXT_ORDER, ordered=True)
+
+    sns.set_theme(style="whitegrid")
+    fig, ax = plt.subplots(figsize=(8.5, 4.2))
+
+    sns.lineplot(
+        data=agg.sort_values("variant"),
+        x="variant",
+        y=metric,
+        hue="eval_language",
+        style="context_label",
+        markers=True,
+        dashes=True,
+        linewidth=2,
+        ax=ax,
+    )
+
+    ax.set_title(f"{model_family} ({regime}) — Macro-F1 over input variants ({setting})")
+    ax.set_xlabel("Input variant")
+    ax.set_ylabel("Macro-F1")
+    ax.tick_params(axis="x", rotation=25)
+    ax.set_ylim(0, 1.0)
+    ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", title="")
+
+    save_plot(fig, save_path)
+    return agg

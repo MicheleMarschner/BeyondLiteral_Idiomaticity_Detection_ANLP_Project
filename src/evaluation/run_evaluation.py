@@ -90,6 +90,7 @@ def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
 
     return df
 
+
 def run_evaluation():
     """Runs evaluation reporting and writes the master metrics table to the results directory"""
     overview_df = create_evaluation_overview(experiments_root=PATHS.runs, results_root=PATHS.results)
