@@ -5,7 +5,7 @@ from utils.helper import to_numpy_int, to_numpy_float
 
 
 def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
-    """Convert 1D literal-class probabilities into 0/1 predictions using a threshold."""
+    """Convert 1D literal-class probabilities into 0/1 predictions using a threshold"""
     
     proba = to_numpy_float(proba)
     assert proba.ndim == 1, (f"probabilities must be 1D after squeeze, got shape {proba.shape}")
@@ -15,7 +15,7 @@ def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
 
 
 def compute_confusion_matrix_counts(gold_labels: np.ndarray, preds: np.ndarray) -> Dict[str, int]:
-    """Compute TP/FP/TN/FN for binary classification with positive class=1."""
+    """Compute TP/FP/TN/FN for binary classification with positive class=1"""
 
     tp = int(np.sum((gold_labels == 1) & (preds == 1)))
     fp = int(np.sum((gold_labels == 0) & (preds == 1)))
@@ -26,12 +26,12 @@ def compute_confusion_matrix_counts(gold_labels: np.ndarray, preds: np.ndarray) 
 
 
 def compute_accuracy(correct: int, total: int) -> float:
-    """Compute classification accuracy as the fraction of correct predictions over all predictions (returns 0.0 if total is 0)."""
+    """Compute classification accuracy as the fraction of correct predictions over all predictions (returns 0.0 if total is 0)"""
     return (correct / total) if total > 0 else 0.0
 
 
 def compute_precision_recall_f1_from_counts(tp: int, fp: int, fn: int) -> Tuple[float, float, float]:
-    """Precision/recall/F1 for a class given tp/fp/fn."""
+    """Precision/recall/F1 for a class given tp/fp/fn"""
     precision = tp / (tp + fp) if (tp + fp) != 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) != 0 else 0.0
     f1 = (2.0 * precision * recall / (precision + recall)) if (precision + recall) != 0 else 0.0
@@ -40,7 +40,7 @@ def compute_precision_recall_f1_from_counts(tp: int, fp: int, fn: int) -> Tuple[
 
 
 def compute_macro_metrics(tp: int, tn: int, fp: int, fn: int) ->  Tuple[float, float, float]:
-    """Macro-average precision/recall/F1 for binary classification (mean of pos and neg class metrics)."""
+    """Macro-average precision/recall/F1 for binary classification (mean of pos and neg class metrics)"""
     pos_precision, pos_recall, pos_f1 = compute_precision_recall_f1_from_counts(tp=tp, fp=fp, fn=fn)
     neg_precision, neg_recall, neg_f1 = compute_precision_recall_f1_from_counts(tp=tn, fp=fn, fn=fp)
 
@@ -55,7 +55,7 @@ def compute_metrics(
     gold_labels: Sequence[int], 
     preds: Sequence[int],
 ) -> Dict[str, Any]:
-    """Compute accuracy, macro P/R/F1, and confusion-matrix counts for binary predictions."""
+    """Compute accuracy, macro P/R/F1, and confusion-matrix counts for binary predictions"""
     
     gold_labels = to_numpy_int(gold_labels)
     preds = to_numpy_int(preds)

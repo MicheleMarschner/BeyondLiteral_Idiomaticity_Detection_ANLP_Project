@@ -15,7 +15,7 @@ class ExperimentTemplate:
 
 EXPERIMENTS = ExperimentTemplate(
     settings=["one_shot"],
-    language_mode="per_language",            # "cross_lingual", "multilingual" !TODO: if [] grid needs to be adapted
+    language_mode="per_language",
     languages=["EN"],
     input_variant=[
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []}

@@ -21,7 +21,7 @@ def flatten_run(experiment_dir: Path) -> list[dict]:
 
         rows.append({
             **base,
-            "eval_language": "overall",
+            "eval_language": "Joint",
             "accuracy": overall_metrics.get("accuracy"),
             "macro_f1": overall_metrics.get("macro_f1"),
             "macro_precision": overall_metrics.get("macro_precision"),

@@ -20,6 +20,9 @@ VARIANT_ORDER = [
 LANG_ORDER = ["EN", "PT", "Joint"]  # "joint" wird ggf. aus EN/PT berechnet
 CONTEXT_ORDER = ["Full", "Target"]  # Full zuerst (dein Wunsch)
 METRIC_ORDER = ["Full", "Target", "Δ"]
+REGIME_ORDER = ["isolated", "joint"]
+
+
 
 def normalize_variant(df: pd.DataFrame) -> pd.DataFrame:
     """Create a readable 'variant' label from transform+features."""
@@ -144,8 +147,6 @@ def load_results_overviews(experiments_root, results_root, results_sub_dir, spli
     return master_df, slices_df, masking_df
 
 
-
-
 def prepare_baseline_master(master_df: pd.DataFrame, *, setting: str = "zero_shot") -> pd.DataFrame:
     """
     Prepare a clean neutral view of the master table:
@@ -185,6 +186,53 @@ def prepare_master_for_settings(
         categories=[l for l in LANG_ORDER if l in set(df["eval_language"])],
         ordered=True
     )
+    return df
+
+
+def prepare_master_with_regime(
+    master_df: pd.DataFrame,
+    *,
+    setting: str = "zero_shot",
+    model_family: str | None = None,          # None = keep all
+    include_mwe_segment: bool = True,
+    train_lang_joint: str = "EN_PT_GL",
+    eval_languages: tuple[str, ...] = ("EN", "PT", "GL", "Joint"),
+) -> pd.DataFrame:
+    """
+    Prepare master with:
+      - variant (normalize_variant)
+      - context_label (normalize_context)
+      - regime in {isolated, joint}
+    Keeps only rows matching isolated or joint regime.
+    """
+    df = master_df.copy()
+
+    # normalize language tag to avoid whitespace mismatches
+    df["language"] = df["language"].astype(str).str.strip().str.replace(" ", "", regex=False)
+
+    df = df[
+        (df["setting"] == setting) &
+        (df["include_mwe_segment"] == include_mwe_segment) &
+        (df["eval_language"].isin(eval_languages))
+    ].copy()
+
+    if model_family is not None:
+        df = df[df["model_family"] == model_family].copy()
+
+    df = normalize_variant(df)
+    df = normalize_context(df)
+
+    is_isolated = (df["language_mode"] == "per_language") & (df["language"] == df["eval_language"])
+    is_joint    = (df["language_mode"] == "multilingual") & (df["language"] == train_lang_joint)
+
+    df = df[is_isolated | is_joint].copy()
+    df["regime"] = "isolated"
+    df.loc[is_joint, "regime"] = "joint"
+    df["regime"] = pd.Categorical(df["regime"], categories=REGIME_ORDER, ordered=True)
+
+    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
+    df["context_label"] = pd.Categorical(df["context_label"], categories=CONTEXT_ORDER, ordered=True)
+
     return df
 
 
