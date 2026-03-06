@@ -5,7 +5,7 @@ import pandas as pd
 from config import PATHS
 from utils.helper import read_json, write_json
 from models.factory import get_model_runner
-from data import load_data_splits, build_inputs_for_splits
+from data.data import load_data_splits, build_inputs_for_splits
 from evaluation.metrics import compute_metrics, make_predictions
 from training import get_model
 

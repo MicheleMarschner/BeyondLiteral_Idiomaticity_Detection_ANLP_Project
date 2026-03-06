@@ -16,10 +16,10 @@ class ExperimentTemplate:
 EXPERIMENTS = ExperimentTemplate(
     settings=["one_shot"],
     language_mode="per_language",
-    languages=["EN"],
+    languages=["EN", "PT"],
     input_variant=[
-        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []}
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []},
     ],
-    model_families=["mBERT"],
+    model_families=["logreg_tfidf", "logreg_word2vec"],
     seeds=[51]
 )

@@ -19,7 +19,7 @@ def run_deeper_analysis(experiments_root, results_root):
     plots_path = results_sub_dir / "plots"
     ensure_dir(plots_path)
 
-    baseline_dir_name = "zero_shot__EN__previous_target_next_True_none_empty__mBERT__seed51"
+    baseline_dir_name = "zero_shot__EN__previous_target_next_True_none_empty__logreg_tfidf__seed51"
     learning_curves_path = experiments_root / baseline_dir_name / "learning_curves.json"
     train_loss_dict = read_json(learning_curves_path)
     plot_loss_curves(train_loss_dict, plots_path)

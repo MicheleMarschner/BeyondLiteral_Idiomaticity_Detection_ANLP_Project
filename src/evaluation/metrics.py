@@ -14,7 +14,7 @@ def make_predictions(proba: Sequence[Any], threshold: float=0.5) -> np.ndarray:
     return preds
 
 
-def compute_confusion_matrix_counts(gold_labels: np.ndarray, preds: np.ndarray) -> Dict[str, int]:
+def _compute_confusion_matrix_counts(gold_labels: np.ndarray, preds: np.ndarray) -> Dict[str, int]:
     """Compute TP/FP/TN/FN for binary classification with positive class=1"""
 
     tp = int(np.sum((gold_labels == 1) & (preds == 1)))
@@ -25,12 +25,12 @@ def compute_confusion_matrix_counts(gold_labels: np.ndarray, preds: np.ndarray) 
     return {"tp": tp, "fp": fp, "tn": tn, "fn": fn}
 
 
-def compute_accuracy(correct: int, total: int) -> float:
+def _compute_accuracy(correct: int, total: int) -> float:
     """Compute classification accuracy as the fraction of correct predictions over all predictions (returns 0.0 if total is 0)"""
     return (correct / total) if total > 0 else 0.0
 
 
-def compute_precision_recall_f1_from_counts(tp: int, fp: int, fn: int) -> Tuple[float, float, float]:
+def _compute_precision_recall_f1_from_counts(tp: int, fp: int, fn: int) -> Tuple[float, float, float]:
     """Precision/recall/F1 for a class given tp/fp/fn"""
     precision = tp / (tp + fp) if (tp + fp) != 0 else 0.0
     recall = tp / (tp + fn) if (tp + fn) != 0 else 0.0
@@ -39,10 +39,10 @@ def compute_precision_recall_f1_from_counts(tp: int, fp: int, fn: int) -> Tuple[
     return precision, recall, f1
 
 
-def compute_macro_metrics(tp: int, tn: int, fp: int, fn: int) ->  Tuple[float, float, float]:
+def _compute_macro_metrics(tp: int, tn: int, fp: int, fn: int) ->  Tuple[float, float, float]:
     """Macro-average precision/recall/F1 for binary classification (mean of pos and neg class metrics)"""
-    pos_precision, pos_recall, pos_f1 = compute_precision_recall_f1_from_counts(tp=tp, fp=fp, fn=fn)
-    neg_precision, neg_recall, neg_f1 = compute_precision_recall_f1_from_counts(tp=tn, fp=fn, fn=fp)
+    pos_precision, pos_recall, pos_f1 = _compute_precision_recall_f1_from_counts(tp=tp, fp=fp, fn=fn)
+    neg_precision, neg_recall, neg_f1 = _compute_precision_recall_f1_from_counts(tp=tn, fp=fn, fn=fp)
 
     macro_precision = 0.5 * (pos_precision + neg_precision)
     macro_recall = 0.5 * (pos_recall + neg_recall)
@@ -62,11 +62,11 @@ def compute_metrics(
 
     assert len(preds) == len(gold_labels), (f"Length mismatch between preds={len(preds)} and gold_labels={len(gold_labels)}")
 
-    confusion_matrix_values = compute_confusion_matrix_counts(gold_labels, preds)
+    confusion_matrix_values = _compute_confusion_matrix_counts(gold_labels, preds)
     tp, fp, tn, fn = confusion_matrix_values['tp'], confusion_matrix_values['fp'], confusion_matrix_values['tn'], confusion_matrix_values['fn']
 
-    accuracy = compute_accuracy(tp + tn, tp + tn + fp + fn)
-    macro_precision, macro_recall, macro_f1 = compute_macro_metrics(tp, tn, fp, fn)
+    accuracy = _compute_accuracy(tp + tn, tp + tn + fp + fn)
+    macro_precision, macro_recall, macro_f1 = _compute_macro_metrics(tp, tn, fp, fn)
 
     return {
         "accuracy": float(accuracy),
@@ -83,7 +83,8 @@ def compute_metrics_per_language(
     languages: Sequence[str],
     threshold: float = 0.5,
 ) -> Dict[str, Any]:
-    
+    """Compute overall and per-language classification metrics"""
+
     gold_labels = to_numpy_int(gold_labels)
     preds = to_numpy_int(preds)
     langs = np.asarray(languages)

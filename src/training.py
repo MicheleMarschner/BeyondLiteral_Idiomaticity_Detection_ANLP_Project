@@ -2,18 +2,43 @@ from torch import nn
 from pathlib import Path
 import joblib
 from transformers import (AutoModelForSequenceClassification, Trainer, TrainingArguments)
-
 import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
 from utils.helper import ensure_dir, write_json, read_json
 
 
+def _load_model(model_family: str, model_path: Path, best_params: Dict[str, str]) -> Union[nn.Module, Any]:
+    """Load existing model from checkpoint"""
+
+    if model_family.startswith("logreg"):
+            model = joblib.load(model_path)
+    else:
+        # Load model with model weights and tokenizer
+        model = AutoModelForSequenceClassification.from_pretrained(model_path)
+        best_params["tokenizer_source"] = str(model_path)
+        
+        # Freeze model layers
+        model.eval()
+        for p in model.parameters():
+            p.requires_grad = False
+
+        args = TrainingArguments(
+            output_dir=str(model_path),
+            per_device_eval_batch_size=int(best_params.get("batch_size", 8)),
+            report_to=["none"],
+        )
+
+        model = Trainer(model=model, args=args)
+
+    return model
+
+
 def get_model(
     experiment_config: Dict[str, Any], 
     experiment_dir: Path, 
     train_data: pd.DataFrame, 
-    val_data: pd.DataFrame, 
+    dev_data: pd.DataFrame, 
     runner: Any
 ) -> Tuple[Union[nn.Module, Any], Dict[str, Any]]:
     """
@@ -31,7 +56,7 @@ def get_model(
         print("Model not found. Training...")
         
         # Trigger full training pipeline
-        model, tuning_results, best_params, best_curves = runner.tune(experiment_config, model_path, train_data, val_data)
+        model, tuning_results, best_params, best_curves = runner.tune(experiment_config, model_path, train_data, dev_data)
 
         tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
         ensure_dir(experiment_dir)
@@ -40,28 +65,10 @@ def get_model(
         pd.DataFrame(tuning_results).to_csv(experiment_dir / "tuning_results.csv", index=False)
         write_json(experiment_dir / "learning_curves.json", best_curves)
 
-    else:    # Re-instantiate a clean model architecture and load the best weights (Frozen state)
+    else:    # Re-instantiate a new model and load the best weights (Frozen state)
         print("Loading existing model...")
 
         best_params = read_json(experiment_dir / "best_params.json")
-
-        if model_family.startswith("logreg"):
-            model = joblib.load(model_path)
-        else:
-            model = AutoModelForSequenceClassification.from_pretrained(model_path)
-            best_params["tokenizer_source"] = str(model_path)
-            model.eval()
-
-            for p in model.parameters():
-                p.requires_grad = False
-
-            args = TrainingArguments(
-                output_dir=str(model_path),
-                per_device_eval_batch_size=int(best_params.get("batch_size", 8)),
-                report_to=["none"],
-            )
-
-            model = Trainer(model=model, args=args)
-
+        model = _load_model(model_family, model_path, best_params)
     
     return model, best_params

@@ -8,7 +8,7 @@ from evaluation.metrics import compute_metrics, make_predictions, compute_metric
 from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
 from evaluation.reporting import save_artifacts, build_test_predictions
 from training import get_model
-from data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
+from data.data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
 from config import Paths, PATHS
 from models.factory import get_model_runner
 
@@ -87,7 +87,7 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
             threshold=0.5,
         )
     else:
-        metrics = compute_metrics(test_data["label"], test_preds)  # changed label_col default to "label" according to the data files, was "Label" before
+        metrics = compute_metrics(test_data["label"], test_preds)  
 
     save_artifacts(
         run_dir=experiment_dir,
