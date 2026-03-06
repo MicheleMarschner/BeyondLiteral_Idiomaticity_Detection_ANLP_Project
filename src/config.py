@@ -10,16 +10,6 @@ def is_colab() -> bool:
 
 
 def is_kaggle() -> bool:
-    if os.getenv("KAGGLE_KERNEL_RUN_TYPE"):
-        return True
-    return False
-
-
-def is_colab() -> bool:
-    return "COLAB_GPU" in os.environ or "COLAB_TPU_ADDR" in os.environ
-
-
-def is_kaggle() -> bool:
     if Path("/kaggle/input").exists():
         return True
     return False
@@ -80,7 +70,7 @@ nltk.data.path.insert(0, str(NLTK_DATA_DIR))
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-### Data configs
+# Data configs
 MIN_TRAIN = 500
 MIN_DEV = 100
 MIN_TEST = 200
