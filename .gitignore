@@ -18,3 +18,5 @@ runs/
 ./src/analysis_submodule
 experiments
 evaluation.md
+experiments.tar.gz
+experiments_tar.md
