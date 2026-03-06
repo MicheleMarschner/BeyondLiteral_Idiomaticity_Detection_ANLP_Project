@@ -14,9 +14,7 @@ services:
       - ./data:/app/data:ro
       - ./experiments:/app/experiments
       - ./results:/app/results
-    environment:
-      EXPERIMENTS_URL: "https://drive.google.com/uc?export=download&id=1X_scCj_fxi7nLO-2wqFQWrAyGuwpomWE"
-    command: ["bash", "-lc", "download_experiments.sh && python -m src.main evaluate"]
+    command: ["evaluate"]
 
   analyse:
     build: .
@@ -24,6 +22,4 @@ services:
       - ./data:/app/data
       - ./experiments:/app/experiments
       - ./results:/app/results
-    environment:
-      EXPERIMENTS_URL: "https://drive.google.com/uc?export=download&id=1X_scCj_fxi7nLO-2wqFQWrAyGuwpomWE"
-    command: ["bash", "-lc", "download_experiments.sh && python -m src.main analyse"]
+    command: ["analyse"]
