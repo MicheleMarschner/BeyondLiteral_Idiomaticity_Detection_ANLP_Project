@@ -12,7 +12,13 @@ def _load_model(model_family: str, model_path: Path, best_params: Dict[str, str]
     """Load existing model from checkpoint"""
 
     if model_family.startswith("logreg"):
-            model = joblib.load(model_path)
+        obj = joblib.load(model_path)
+        
+        if "model" in obj:
+            model = obj["model"]
+        else:
+            raise ValueError(f"Loaded a dict from {model_path} but can't find classifier key. Keys={list(obj.keys())}")
+        
     else:
         # Load model with model weights and tokenizer
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
