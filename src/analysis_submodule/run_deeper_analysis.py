@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, Dict
 
 from analysis.evaluate_subslices import evaluate_subslices
 from analysis_submodule.stress_masking import run_stress_masking_over_all_runs
@@ -7,11 +8,37 @@ from analysis_submodule.main_analysis_isolated import baseline_overview_table, c
 from analysis_submodule.slice_analysis import compute_hard_control_gap_all_runs, hard_control_gap_for_run, plot_hard_control_gap_aggregated
 from analysis_submodule.language_training_analysis import build_table_joint_vs_isolated, plot_joint_vs_isolated_connected, plot_regime_connected_big_figure, table3_joint_minus_isolated_deltas
 from analysis_submodule.main_analysis_joint import plot_context_effect_by_regime, plot_en_pt_gap_by_regime, plot_heatmaps_context_variant_by_regime, table1_baseline_scoreboard_by_regime, table2_context_variant_by_language_joint
-from analysis_submodule.utils.plots import plot_loss_curves
+from analysis_submodule.utils.plots import plot_loss_curves_flat_comparison, plot_loss_curves_nested, plot_loss_curves_flat
 from utils.helper import ensure_dir, read_json
 from analysis_submodule.utils.helper import load_results_overviews,  save_multicol_latex, prepare_master_with_regime
 
    
+def load_learning_curves(experiments_root: Path, model_family: str) -> Dict[str, Any]:
+    baseline_dir_name = (
+        f"zero_shot__EN__previous_target_next_True_none_empty__{model_family}__seed51"
+    )
+    learning_curves_path = experiments_root / baseline_dir_name / "learning_curves.json"
+    return read_json(learning_curves_path)
+
+
+def plot_baseline_loss_curves(experiments_root: Path, save_dir: Path) -> None:
+    loss_curves = {
+        "mBERT": load_learning_curves(experiments_root, "mBERT"),
+        "logreg_tfidf": load_learning_curves(experiments_root, "logreg_tfidf"),
+        "logreg_word2vec": load_learning_curves(experiments_root, "logreg_word2vec"),
+    }
+
+    plot_loss_curves_nested(loss_curves["mBERT"], save_dir, "mBERT")
+
+    plot_loss_curves_flat_comparison(
+        loss_curves["logreg_tfidf"],
+        loss_curves["logreg_word2vec"],
+        label_1="logreg_tfidf",
+        label_2="logreg_word2vec",
+        save_dir=save_dir,
+    )
+
+
 
 
 def run_deeper_analysis(experiments_root, results_root):
@@ -19,10 +46,7 @@ def run_deeper_analysis(experiments_root, results_root):
     plots_path = results_sub_dir / "plots"
     ensure_dir(plots_path)
 
-    baseline_dir_name = "zero_shot__EN__previous_target_next_True_none_empty__logreg_tfidf__seed51"
-    learning_curves_path = experiments_root / baseline_dir_name / "learning_curves.json"
-    train_loss_dict = read_json(learning_curves_path)
-    plot_loss_curves(train_loss_dict, plots_path)
+    plot_baseline_loss_curves(experiments_root, plots_path)
 
     # load aggregated results from experiments
     master_df, slices_df, masking_df = load_results_overviews(experiments_root, results_root, results_sub_dir)
