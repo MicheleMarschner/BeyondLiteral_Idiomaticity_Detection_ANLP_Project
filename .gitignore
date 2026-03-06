@@ -10,13 +10,11 @@ build/
 .nltk_data/
 
 runs/
-wandb/
 .DS_Store
 .ipynb_checkpoints/
 **/*.pth
 **/*.pth.tar
 
-./src/analysis
-./src/models/logreg
+./src/analysis_submodule
 experiments
 evaluation.md

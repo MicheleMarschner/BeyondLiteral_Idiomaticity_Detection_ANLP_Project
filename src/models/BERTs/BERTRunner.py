@@ -1,19 +1,26 @@
 import numpy as np
 from pathlib import Path
 import pandas as pd
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer, PreTrainedModel, Trainer, TrainingArguments)
+from transformers import (
+    PreTrainedTokenizerBase, AutoModelForSequenceClassification, 
+    AutoTokenizer, PreTrainedModel, Trainer, TrainingArguments
+)
 from datasets import Dataset
 from sklearn.model_selection import ParameterGrid
 from sklearn.metrics import f1_score
 
-from typing import Dict, Tuple, Any, List
+from typing import Dict, Sequence, Tuple, Any, List
 
 from utils.helper import set_seeds
 from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
 
 
-def tokenize_function(examples, tokenizer, max_length: int):
-    """Tokenize text with padding and truncation."""
+def tokenize_function(
+    examples: Dict[str, Sequence[str]],
+    tokenizer: PreTrainedTokenizerBase,
+    max_length: int,
+) -> Dict[str, Any]:
+    """Tokenize text with padding and truncation"""
     return tokenizer(
         examples["input"],
         padding="max_length",
@@ -22,14 +29,18 @@ def tokenize_function(examples, tokenizer, max_length: int):
     )
 
 
-def tokenize_input(params, train_data, dev_data):
+def tokenize_input(
+    params: Dict[str, Any],
+    train_data: pd.DataFrame,
+    dev_data: pd.DataFrame,
+) -> Tuple[Dataset, Dataset, PreTrainedTokenizerBase]:
+    """Tokenize train/dev data and return torch-formatted HF Datasets plus tokenizer"""
     train_dataset = Dataset.from_pandas(train_data)
     dev_dataset = Dataset.from_pandas(dev_data)
 
-    tokenizer_src = params.get("tokenizer_source", params["model_identifier"])
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_src)
-    if "tokenizer_source" not in params:
-        tokenizer.add_special_tokens({"additional_special_tokens": ["<MWE>", "</MWE>"]})
+    tokenizer = AutoTokenizer.from_pretrained(params["model_identifier"])
+    specials = {"additional_special_tokens": ["<MWE>", "</MWE>"]}
+    tokenizer.add_special_tokens({"additional_special_tokens": ["<MWE>", "</MWE>"]})
 
     max_length = int(params["max_length"])
 
@@ -56,12 +67,26 @@ def tokenize_input(params, train_data, dev_data):
 
     return train_dataset, dev_dataset, tokenizer
 
-def compute_metrics(eval_pred):
+
+def compute_metrics(eval_pred: Tuple[np.ndarray, np.ndarray]) -> Dict[str, float]:
     """Calculate Macro F1 score (average of F1 for each class)"""
     predictions, labels = eval_pred
     predictions = predictions.argmax(axis=-1)
     macro_f1 = f1_score(labels, predictions, average="macro")
     return {"macro-F1": macro_f1}
+
+
+def freeze_encoder(model: PreTrainedModel) -> PreTrainedModel:
+    """Freeze all layers except the default classification head"""
+    for p in model.parameters():
+        p.requires_grad = False
+
+    # defreeze only head for training
+    if hasattr(model, "classifier"):
+        for p in model.classifier.parameters():
+            p.requires_grad = True
+
+    return model
 
 
 class BERTRunner:
@@ -80,7 +105,7 @@ class BERTRunner:
 
     
     def initialize(self, params: Dict[str, Any], seed: int=51, model_family: str="mBERT") -> PreTrainedModel:
-        
+        """Load a binary sequence classifier from params and return the initialized model"""
         model = AutoModelForSequenceClassification.from_pretrained(
                     params.get("model_identifier"),
                     num_labels=2,
@@ -108,10 +133,13 @@ class BERTRunner:
         best_tokenizer = None
 
         model_family = config["model_family"]
-        if model_family == "mBERT": 
+        is_probe = model_family.endswith("_probe")
+        base_family = model_family.replace("_probe", "")
+
+        if base_family == "mBERT": 
             model_id = "bert-base-multilingual-cased"
             param_grid = mBERT_grid
-        elif model_family == "modernBERT": 
+        elif base_family == "modernBERT": 
             model_id = "answerdotai/ModernBERT-large"
             param_grid = modernBERT_grid
         else:
@@ -133,6 +161,9 @@ class BERTRunner:
                 set_seeds(config['seed'])
                 model = self.initialize(params={**learning_config, "model_identifier": model_id})
                 model.resize_token_embeddings(len(tokenizer))
+
+                if is_probe:
+                    model = freeze_encoder(model)
                 
                 run_name = (
                     f"ml{tokenization_config['max_length']}"
@@ -157,7 +188,7 @@ class BERTRunner:
 
                     # Evaluation & saving
                     eval_strategy="epoch",
-                    save_strategy="epoch",  # no?
+                    save_strategy="epoch",  
                     save_total_limit=1,
                     save_only_model=True,      # avoids optimizer.pt/scheduler.pt
                     load_best_model_at_end=True,

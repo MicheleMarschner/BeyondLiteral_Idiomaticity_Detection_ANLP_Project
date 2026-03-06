@@ -25,8 +25,8 @@ def build_test_predictions(
     return rows
 
 
-def flatten_metrics(metrics):
-    """Convert metrics into a flat row to log results and combine them across experiments for later analysis."""
+def _flatten_metrics(metrics):
+    """Convert metrics into a flat row to log results and combine them across experiments for later analysis"""
     out = {}
 
     if "overall" in metrics:
@@ -66,7 +66,7 @@ def save_artifacts(
     write_json(run_dir / "metrics.json", metrics)
     pd.DataFrame(split_stats).to_csv(run_dir / "split_stats.csv", index=False)
     pd.DataFrame(test_predictions).to_csv(run_dir / "test_predictions.csv", index=False)
-    pd.DataFrame([flatten_metrics(metrics)]).to_csv(run_dir / "metrics.csv", index=False)
+    pd.DataFrame([_flatten_metrics(metrics)]).to_csv(run_dir / "metrics.csv", index=False)
 
     print(f"All files successfully written to {run_dir}")
 

@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-
 from typing import Union, Sequence
 
 from config import PATHS, Paths
@@ -13,11 +12,12 @@ def _make_freq_bins(freq: pd.Series) -> pd.Categorical:
 
     edges = [1, 2, 5, 10, 20, 30, 50, 10**9]
     labels = ["1", "2-4", "5-9", "10-19", "20-29", "30-49", "50+"]
+    
     return pd.cut(freq, bins=edges, labels=labels, right=False)
 
 
 def add_mwe_freq_bin_cols(df: pd.DataFrame) -> pd.DataFrame:
-    """Adds split-based MWE frequency columns: mwe_freq, mwe_freq_bin."""
+    """Adds split-based MWE frequency columns: mwe_freq, mwe_freq_bin"""
     res_df = df.copy()
     
     counts = res_df["MWE"].astype(str).value_counts()
@@ -82,8 +82,8 @@ def identify_potentially_ambiguous_mwe(df: pd.DataFrame, min_total: int=5) -> pd
     # True if the instance belongs to an ambiguous (Language, MWE) type
     is_amb = df["minority_label"].notna()
     df["is_ambiguous_mwe"] = is_amb
-    # slice_minority_instance
-    df["slice_minority_instance"] = ""
+    
+    df["slice_minority_instance"] = ""      # slice_minority_instance
 
     df.loc[is_amb, "slice_minority_instance"] = np.where(
         df.loc[is_amb, "label"].values == df.loc[is_amb, "minority_label"].values,
@@ -159,15 +159,13 @@ def add_ambiguous_slices(
     df.to_csv(csv_path, index=False)
 
 
-def create_subslices(project_paths: Paths = PATHS, split_type: str = "test"):
+def create_subslices(project_paths: Paths = PATHS, split_type: str = "test") -> None:
     """Creates subslice definitions for one_shot and zero_shot (given split) and evaluates runs on these slices"""
 
     for setting in ["one_shot", "zero_shot"]:
         train_path = project_paths.data_preprocessed / f"{setting}_splits/{setting}_train.csv"
         split_path = project_paths.data_preprocessed / f"{setting}_splits/{setting}_{split_type}.csv"
-        
         analysis_data_path = project_paths.data_analysis / f"{setting}_{split_type}_analysis.csv"
-        slice_ids_path = project_paths.data_analysis / f"{setting}_{split_type}_slice_ids.json"
 
         if analysis_data_path.exists():
             continue
