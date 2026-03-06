@@ -29,7 +29,6 @@ def main() -> None:
     
     if args.action == "analyse":
         evaluate_subslices(project_paths=PATHS)
-        run_deeper_analysis(experiments_root=PATHS.runs, results_root=PATHS.results)
     
 if __name__ == "__main__":
     main()
