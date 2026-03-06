@@ -1,0 +1,2 @@
+run_dir,setting,language_mode,language,model_family,seed,macro_f1_normal,macro_f1_first,delta_macro_f1_first,macro_f1_last,delta_macro_f1_last,macro_f1_both,delta_macro_f1_both,macro_f1_both_n_mask,delta_macro_f1_both_n_mask,delta_macro_f1_both_n_minus_both
+one_shot__EN__previous_target_next_True_none_empty__logreg_tfidf__seed51,one_shot,per_language,EN,logreg_tfidf,51,0.6764818909390646,0.6627189639922788,-0.013762926946785825,0.6649750712250713,-0.011506819713993366,0.6415014574015976,-0.03498043353746705,0.6219601899115084,-0.05452170102755627,-0.01954126749008922

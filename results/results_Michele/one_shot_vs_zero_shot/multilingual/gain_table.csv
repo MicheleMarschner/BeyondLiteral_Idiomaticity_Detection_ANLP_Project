@@ -1,0 +1,7 @@
+model_family,eval_language,gain
+logreg_tfidf,EN,0.013049346801986994
+logreg_tfidf,PT,0.0
+logreg_word2vec,EN,-0.002711719785700839
+logreg_word2vec,PT,0.0
+mBERT,EN,0.054416661623860274
+mBERT,PT,0.036771644921197666

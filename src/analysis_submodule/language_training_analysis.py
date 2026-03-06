@@ -2,261 +2,454 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from pathlib import Path
+import numpy as np
 
-from analysis_submodule.utils.helper import CONTEXT_ORDER, VARIANT_ORDER, REGIME_ORDER, normalize_context, normalize_variant, prepare_master_with_regime, save_plot
+from analysis_submodule.utils.helper import CONTEXT_ORDER, VARIANT_ORDER, LANGUAGE_SETUP_ORDER, save_plot
+from analysis_submodule.main_analysis import get_data_for_setup, pivot_strict
 
 
-def table3_joint_minus_isolated_deltas(df_reg: pd.DataFrame) -> dict[str, pd.DataFrame]:
+# -----------------------------------------------------------------------------
+# INTERNAL HELPERS (refactor, minimal)
+# -----------------------------------------------------------------------------
+def _get_iso_and_joint(
+    master_df: pd.DataFrame,
+    *,
+    setting: str,
+    include_mwe_segment: bool,
+    train_lang_joint: str,
+    eval_languages: tuple[str, ...],
+    model_family: str | None = None,
+    baseline_only: bool = False,  # Standard + Full
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Per model_family table: delta = joint - isolated.
-    Rows=variant; Cols=(language, metric) where metric in [Full, Target, Δ].
+    Returns (iso_df, joint_df) using get_data_for_setup.
+    Optionally filters to model_family and baseline (Standard+Full), and restricts eval_languages.
     """
-    agg = (
-        df_reg.groupby(["model_family", "eval_language", "variant", "context_label", "regime"], dropna=False)["macro_f1"]
-        .mean()
-        .reset_index()
+    iso = get_data_for_setup(
+        master_df,
+        setup="isolated",
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        drop_probe_runs=True,
+    )
+    joint = get_data_for_setup(
+        master_df,
+        setup="multilingual",
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        drop_probe_runs=True,
     )
 
-    # wide regimes
-    wide_r = agg.pivot_table(
-        index=["model_family", "eval_language", "variant", "context_label"],
-        columns="regime",
-        values="macro_f1",
-        aggfunc="mean",
-    ).reset_index()
+    if model_family is not None:
+        iso = iso[iso["model_family"] == model_family].copy()
+        joint = joint[joint["model_family"] == model_family].copy()
 
-    if "isolated" not in wide_r.columns:
-        wide_r["isolated"] = float("nan")
-    if "joint" not in wide_r.columns:
-        wide_r["joint"] = float("nan")
+    if baseline_only:
+        iso = iso[(iso["variant"] == "Standard") & (iso["context_label"] == "Full")].copy()
+        joint = joint[(joint["variant"] == "Standard") & (joint["context_label"] == "Full")].copy()
 
-    wide_r["delta"] = wide_r["joint"] - wide_r["isolated"]
+    iso = iso[iso["eval_language"].astype(str).isin(eval_languages)].copy()
+    joint = joint[joint["eval_language"].astype(str).isin(eval_languages)].copy()
+
+    return iso, joint
+
+
+# -----------------------------------------------------------------------------
+# TABLES
+# -----------------------------------------------------------------------------
+def table_train_delta_baseline(
+    master_df: pd.DataFrame,
+    setting: str = "zero_shot",
+    include_mwe_segment: bool = True,
+    train_lang_joint: str = "EN_PT_GL",
+    metric: str = "macro_f1",
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+) -> pd.DataFrame:
+    """
+    Baseline = Standard + Full.
+    Rows: model_family (all)
+    Columns: (eval_language, iso/multi/Δ)
+    """
+    iso, joint = _get_iso_and_joint(
+        master_df,
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,
+        model_family=None,
+        baseline_only=True,
+    )
+
+    iso_w = pivot_strict(
+        iso,
+        index=["model_family"],
+        columns=["eval_language"],
+        values=metric,
+        what="baseline iso pivot",
+    )
+    joint_w = pivot_strict(
+        joint,
+        index=["model_family"],
+        columns=["eval_language"],
+        values=metric,
+        what="baseline joint pivot",
+    )
+
+    iso_w = iso_w.reindex(index=sorted(iso_w.index))
+    joint_w = joint_w.reindex(index=sorted(joint_w.index))
+
+    cols = [l for l in eval_languages if l in iso_w.columns and l in joint_w.columns]
+    iso_w = iso_w[cols]
+    joint_w = joint_w[cols]
+
+    delta_w = (joint_w - iso_w)
+
+    pieces = []
+    for lang in cols:
+        pieces.append(
+            pd.DataFrame(
+                {
+                    (lang, "iso"): iso_w[lang],
+                    (lang, "multi"): joint_w[lang],
+                    (lang, "Δ"): delta_w[lang],
+                }
+            )
+        )
+    out = pd.concat(pieces, axis=1)
+    out.columns = pd.MultiIndex.from_tuples(out.columns, names=["eval_language", "stat"])
+    return out
+
+
+def tables_train_delta_context_variant(
+    master_df: pd.DataFrame,
+    setting: str = "zero_shot",
+    include_mwe_segment: bool = True,
+    train_lang_joint: str = "EN_PT_GL",
+    metric: str = "macro_f1",
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+) -> dict[str, pd.DataFrame]:
+    """
+    Per model_family:
+      Δtrain = multilingual - isolated
+    for each (eval_language in EN/PT, context_label in Full/Target, variant).
+    """
+    iso, joint = _get_iso_and_joint(
+        master_df,
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,
+        model_family=None,
+        baseline_only=False,
+    )
+
+    for c in ["model_family", "eval_language", "variant", "context_label"]:
+        iso[c] = iso[c].astype(str)
+        joint[c] = joint[c].astype(str)
+
+    cell_keys = ["model_family", "eval_language", "variant", "context_label"]
+
+    iso_s = iso.set_index(cell_keys)[metric].sort_index()
+    joint_s = joint.set_index(cell_keys)[metric].reindex(iso_s.index)
+
+    delta = (joint_s - iso_s).rename("Δ").reset_index()
 
     out: dict[str, pd.DataFrame] = {}
+    for mf in sorted(delta["model_family"].unique()):
+        sub = delta[delta["model_family"] == mf].copy()
 
-    for mf in sorted(wide_r["model_family"].dropna().unique()):
-        sub = wide_r[wide_r["model_family"] == mf].copy()
-
-        piv = sub.pivot_table(
-            index=["variant", "eval_language"],
-            columns="context_label",
-            values="delta",
-            aggfunc="first",
-        ).reset_index()
-
-        if "Full" not in piv.columns or "Target" not in piv.columns:
-            # if missing, still build what exists (but you'll likely want to fix coverage)
-            piv["Full"] = piv.get("Full", float("nan"))
-            piv["Target"] = piv.get("Target", float("nan"))
-
-        piv["Δ"] = piv["Full"] - piv["Target"]
-
-        wide = piv.pivot_table(
-            index="variant",
-            columns="eval_language",
-            values=["Full", "Target", "Δ"],
-            aggfunc="first",
+        tab = pivot_strict(
+            sub,
+            index=["variant"],
+            columns=["eval_language", "context_label"],
+            values="Δ",
+            what=f"ctx×variant delta pivot mf={mf}",
         )
 
-        wide.columns = wide.columns.swaplevel(0, 1)  # (language, metric)
-
         ordered_cols = []
-        for lang in [l for l in ["EN", "PT", "GL"] if l in wide.columns.levels[0]]:
-            for met in ["Full", "Target", "Δ"]:
-                if (lang, met) in wide.columns:
-                    ordered_cols.append((lang, met))
-        wide = wide.reindex(columns=pd.MultiIndex.from_tuples(ordered_cols, names=["language", "metric"]))
+        for lang in [l for l in eval_languages if l in tab.columns.levels[0]]:
+            for ctx in CONTEXT_ORDER:
+                if (lang, ctx) in tab.columns:
+                    ordered_cols.append((lang, ctx))
 
-        out[mf] = wide
+        tab = tab.reindex(columns=pd.MultiIndex.from_tuples(ordered_cols, names=["eval_language", "context_label"]))
+        out[mf] = tab
 
     return out
 
 
-def build_table_joint_vs_isolated(
-    master_df: pd.DataFrame,
-    model_family: str = "mBERT",
-    setting: str = "zero_shot",
-    include_mwe_segment: bool = True,
-    context: str = "previous_target_next",   # Full baseline
-    variant: str = "Standard",               # output of normalize_variant
-    train_lang_joint: str = "EN_PT_GL",      # your joint training tag in `language`
-    eval_languages: tuple[str, ...] = ("EN", "PT", "GL"),
-) -> pd.DataFrame:
-    """
-    Build the comparison table for: isolated (per_language) vs joint (multilingual),
-    evaluated per language, under a fixed baseline input setup.
-    Output columns: language, isolated, joint, delta (joint - isolated).
-    """
-    df = master_df.copy()
+# -----------------------------------------------------------------------------
+# PLOTS
+# -----------------------------------------------------------------------------
 
-    df = df[
-        (df["setting"] == setting) &
-        (df["model_family"] == model_family) &
-        (df["include_mwe_segment"] == include_mwe_segment) &
-        (df["context"] == context)
-    ].copy()
-
-    df = normalize_variant(df)  # adds df["variant"]
-    df = df[df["variant"].astype(str) == variant].copy()
-
-    df = df[df["eval_language"].isin(eval_languages)].copy()
-    if df.empty:
-        raise ValueError("No rows after filtering. Check context/variant/setting/model_family.")
-
-    # isolated: train language == eval language (per_language)
-    iso = df[
-        (df["language_mode"] == "per_language") &
-        (df["language"] == df["eval_language"])
-    ].copy()
-    iso["regime"] = "isolated"
-
-    # joint: multilingual with your joint training tag
-    joint = df[
-        (df["language_mode"] == "multilingual") &
-        (df["language"] == train_lang_joint)
-    ].copy()
-    joint["regime"] = "joint"
-
-    comp = pd.concat([iso, joint], ignore_index=True)
-    if comp.empty:
-        raise ValueError(
-            "No rows for isolated/joint regimes. "
-            "Check language_mode values and train_lang_joint."
-        )
-
-    # average over seeds if multiple
-    agg = (
-        comp.groupby(["eval_language", "regime"], dropna=False)["macro_f1"]
-        .mean()
-        .reset_index()
-        .rename(columns={"eval_language": "language"})
-    )
-
-    wide = agg.pivot_table(
-        index="language",
-        columns="regime",
-        values="macro_f1",
-        aggfunc="mean",
-    ).reset_index()
-
-    # ensure columns exist
-    for c in ["isolated", "joint"]:
-        if c not in wide.columns:
-            wide[c] = float("nan")
-
-    wide["delta"] = wide["joint"] - wide["isolated"]
-
-    # ordering
-    wide["language"] = pd.Categorical(wide["language"], categories=list(eval_languages), ordered=True)
-    wide = wide.sort_values("language").reset_index(drop=True)
-
-    return wide
-
-
-def plot_joint_vs_isolated_connected(
-    table: pd.DataFrame,
-    out_path: Path,
-    title: str = "mBERT: isolated vs joint (Macro-F1)",
-) -> None:
-    """
-    Connected dot plot based on the output of build_table_joint_vs_isolated().
-    Expects columns: language, isolated, joint, delta.
-    """
-    required = {"language", "isolated", "joint"}
-    missing = required - set(table.columns)
-    if missing:
-        raise ValueError(f"Table missing columns: {sorted(missing)}")
-
-    plot_df = table.melt(
-        id_vars=["language"],
-        value_vars=["isolated", "joint"],
-        var_name="regime",
-        value_name="macro_f1",
-    )
-
-    sns.set_theme(style="whitegrid")
-    fig, ax = plt.subplots(figsize=(6.5, 4.0))
-
-    # connect isolated -> joint per language
-    for lang in table["language"].astype(str).tolist():
-        row = table[table["language"].astype(str) == lang].iloc[0]
-        ax.plot(["isolated", "joint"], [row["isolated"], row["joint"]], linewidth=1)
-
-    sns.stripplot(
-        data=plot_df,
-        x="regime",
-        y="macro_f1",
-        hue="language",
-        dodge=True,
-        size=7,
-        ax=ax,
-    )
-
-    ax.set_title(title)
-    ax.set_xlabel("")
-    ax.set_ylabel("Macro-F1")
-    ax.legend(title="Eval language", bbox_to_anchor=(1.02, 1), loc="upper left")
-
-    save_plot(fig, out_path)
-
-
-def plot_regime_connected_big_figure(
+def plot_language_setup_connected_big_figure(
     master_df: pd.DataFrame,
     save_path: Path,
+    *,
     setting: str = "zero_shot",
     model_family: str = "mBERT",
     include_mwe_segment: bool = True,
     train_lang_joint: str = "EN_PT_GL",
-    eval_languages: tuple[str, ...] = ("EN", "PT", "GL"),
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
     metric: str = "macro_f1",
 ) -> pd.DataFrame:
     """
-    One big figure:
-      rows = eval_language
-      cols = context_label
-      x    = regime (isolated, joint)
-      y    = macro_f1
-      hue  = variant
-    Returns the aggregated table used for plotting.
+    Overview: isolated vs joint training across eval_language × context_label with hue=variant.
     """
-    df = prepare_master_with_regime(
+    iso, joint = _get_iso_and_joint(
         master_df,
         setting=setting,
-        model_family=model_family,
         include_mwe_segment=include_mwe_segment,
         train_lang_joint=train_lang_joint,
         eval_languages=eval_languages,
+        model_family=model_family,
+        baseline_only=False,
     )
-    df.to_csv(save_path/"master_regime_change.csv")
 
-    # Mean over seeds / duplicates
-    agg = (
-        df.groupby(["eval_language","context_label","variant","regime"], dropna=False)[metric]
-        .mean()
-        .reset_index()
+    iso["language_setup"] = "isolated"
+    joint["language_setup"] = "joint"
+    df = pd.concat([iso, joint], ignore_index=True)
+
+    df = df.dropna(subset=["language_setup", "eval_language", "context_label", "variant", metric]).copy()
+
+    df["language_setup"] = pd.Categorical(df["language_setup"], categories=LANGUAGE_SETUP_ORDER, ordered=True)
+    df["eval_language"] = pd.Categorical(
+        df["eval_language"].astype(str),
+        categories=[l for l in eval_languages if l in set(df["eval_language"].astype(str))],
+        ordered=True,
     )
+    df["variant"] = pd.Categorical(df["variant"].astype(str), categories=VARIANT_ORDER, ordered=True)
+    df["context_label"] = pd.Categorical(df["context_label"].astype(str), categories=CONTEXT_ORDER, ordered=True)
+
+    df["language_setup"] = df["language_setup"].cat.remove_unused_categories()
+    df["eval_language"] = df["eval_language"].cat.remove_unused_categories()
+    df["variant"] = df["variant"].cat.remove_unused_categories()
+    df["context_label"] = df["context_label"].cat.remove_unused_categories()
 
     grid = sns.catplot(
-        data=agg,
+        data=df,
         kind="point",
-        x="regime",
+        x="language_setup",
         y=metric,
         hue="variant",
         row="eval_language",
         col="context_label",
-        order=REGIME_ORDER,
+        order=LANGUAGE_SETUP_ORDER,
         hue_order=VARIANT_ORDER,
         dodge=True,
         markers="o",
         linestyles="-",
         height=3.2,
         aspect=1.2,
+        estimator=np.mean,
+        errorbar=None,
     )
+
     grid.set_axis_labels("", "Macro-F1")
     grid.set_titles("{row_name} | {col_name}")
-    grid.fig.suptitle(f"Isolated vs Joint (connected) — {model_family} | {setting}", y=1.02)
+    grid.fig.suptitle(f"Isolated vs Joint — {model_family} | {setting}", y=1.02)
 
-    file_path = "regime_connected__mBERT__zero_shot.png"
+    save_plot(grid.fig, save_path)
+    return df
 
-    save_plot(grid.fig, save_path/file_path)
-    return agg
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from pathlib import Path
+import numpy as np
+
+from analysis_submodule.utils.helper import CONTEXT_ORDER, VARIANT_ORDER, LANGUAGE_SETUP_ORDER, save_plot
+from analysis_submodule.main_analysis import get_data_for_setup, pivot_strict
+
+
+# -----------------------------------------------------------------------------
+# INTERNAL: compute Δtrain = joint - isolated in long format (reuse _get_iso_and_joint)
+# -----------------------------------------------------------------------------
+def _delta_train_long(
+    master_df: pd.DataFrame,
+    *,
+    setting: str,
+    include_mwe_segment: bool,
+    train_lang_joint: str,
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+    metric: str = "macro_f1",
+) -> pd.DataFrame:
+    """
+    Returns long df with:
+      model_family, context_label, variant, eval_language, delta_train
+    where delta_train = joint - isolated
+    """
+    iso, joint = _get_iso_and_joint(
+        master_df,
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,
+        model_family=None,
+        baseline_only=False,
+    )
+
+    keys = ["model_family", "context_label", "variant", "eval_language"]
+    for c in keys:
+        iso[c] = iso[c].astype(str)
+        joint[c] = joint[c].astype(str)
+
+    iso_s = iso.set_index(keys)[metric].sort_index()
+    joint_s = joint.set_index(keys)[metric].reindex(iso_s.index)
+
+    delta = (joint_s - iso_s).rename("delta_train").reset_index()
+    return delta
+
+
+# -----------------------------------------------------------------------------
+# Plot B (gemeinsame Figur): Δtrain über Varianten
+#   row = context_label (Full/Target)
+#   col = model_family
+#   hue = eval_language (EN/PT)
+# -----------------------------------------------------------------------------
+def plot_delta_train_over_variants_grid(
+    master_df: pd.DataFrame,
+    save_path: Path,
+    *,
+    title: str,
+    setting: str = "zero_shot",
+    include_mwe_segment: bool = True,
+    train_lang_joint: str = "EN_PT_GL",
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+    metric: str = "macro_f1",
+    height: float = 3.2,
+    aspect: float = 1.2,
+) -> pd.DataFrame:
+    """
+    Gemeinsame Figur (FacetGrid):
+      x = variant
+      y = Δtrain (joint − isolated)
+      hue = eval_language
+      row = context_label
+      col = model_family
+    """
+    df = _delta_train_long(
+        master_df,
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,
+        metric=metric,
+    )
+    df = df.dropna(subset=["delta_train"]).copy()
+    if df.empty:
+        return df
+
+    # ordering
+    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
+    df["context_label"] = pd.Categorical(df["context_label"], categories=CONTEXT_ORDER, ordered=True)
+    df["eval_language"] = pd.Categorical(df["eval_language"], categories=list(eval_languages), ordered=True)
+
+    fams = sorted(df["model_family"].dropna().unique().tolist())
+    df["model_family"] = pd.Categorical(df["model_family"], categories=fams, ordered=True)
+
+    sns.set_theme(style="whitegrid")
+    g = sns.relplot(
+        data=df.sort_values("variant"),
+        kind="line",
+        x="variant",
+        y="delta_train",
+        hue="eval_language",
+        row="context_label",
+        col="model_family",
+        height=height,
+        aspect=aspect,
+        markers=True,
+        dashes=True,
+        estimator=np.mean,  # no-op if unique
+        errorbar=None,
+    )
+
+    for ax in g.axes.flat:
+        ax.axhline(0, color="black", linewidth=1)
+        ax.tick_params(axis="x", rotation=25)
+        ax.set_xlabel("Input variant")
+        ax.set_ylabel("Δtrain (joint − isolated)")
+
+    g.set_titles("{row_name} | {col_name}")
+    g.fig.suptitle(title, y=1.02)
+
+    save_plot(g.fig, save_path)
+    return df
+
+
+# -----------------------------------------------------------------------------
+# Barplot G2: pro model_family eine Figur, row=context_label
+#   x = variant
+#   hue = eval_language (EN/PT)
+#   y = Δtrain
+# -----------------------------------------------------------------------------
+def plot_delta_train_bars_g2_per_model_family(
+    master_df: pd.DataFrame,
+    save_dir: Path,
+    *,
+    setting: str = "zero_shot",
+    include_mwe_segment: bool = True,
+    train_lang_joint: str = "EN_PT_GL",
+    eval_languages: tuple[str, ...] = ("EN", "PT"),
+    metric: str = "macro_f1",
+    height: float = 3.2,
+    aspect: float = 1.6,
+) -> pd.DataFrame:
+    """
+    Erstellt pro model_family eine Figure:
+      row = context_label (Full/Target)
+      x = variant
+      hue = eval_language (EN/PT)
+      y = Δtrain (joint − isolated)
+    """
+    df = _delta_train_long(
+        master_df,
+        setting=setting,
+        include_mwe_segment=include_mwe_segment,
+        train_lang_joint=train_lang_joint,
+        eval_languages=eval_languages,
+        metric=metric,
+    )
+    df = df.dropna(subset=["delta_train"]).copy()
+    if df.empty:
+        return df
+
+    df["variant"] = pd.Categorical(df["variant"], categories=VARIANT_ORDER, ordered=True)
+    df["context_label"] = pd.Categorical(df["context_label"], categories=CONTEXT_ORDER, ordered=True)
+    df["eval_language"] = pd.Categorical(df["eval_language"], categories=list(eval_languages), ordered=True)
+
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    for mf in sorted(df["model_family"].dropna().unique().tolist()):
+        sub = df[df["model_family"] == mf].copy()
+        if sub.empty:
+            continue
+
+        sns.set_theme(style="whitegrid")
+        g = sns.catplot(
+            data=sub.sort_values("variant"),
+            kind="bar",
+            x="variant",
+            y="delta_train",
+            hue="eval_language",
+            row="context_label",
+            height=height,
+            aspect=aspect,
+            errorbar=None,
+        )
+
+        for ax in g.axes.flat:
+            ax.axhline(0, color="black", linewidth=1)
+            ax.tick_params(axis="x", rotation=25)
+            ax.set_xlabel("Input variant")
+            ax.set_ylabel("Δtrain (joint − isolated)")
+
+        g.set_titles("{row_name}")
+        g.fig.suptitle(f"{mf} | Δtrain (joint − isolated) | {setting}", y=1.02)
+
+        save_plot(g.fig, save_dir / f"delta_train_bars__{mf}__{setting}.png")
+
+    return df

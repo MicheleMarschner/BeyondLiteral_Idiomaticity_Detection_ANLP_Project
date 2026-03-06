@@ -6,9 +6,7 @@ from analysis_submodule.utils.helper import save_plot
 
 
 def plot_loss_curves_nested(loss_curves: dict, save_dir: Path, model_family: str = "mBERT") -> None:
-    """
-    Plot train loss (dense) and dev loss (sparse) over steps from saved loss_curves dict.
-    """
+    """Plot train loss and dev loss over steps from saved loss_curves dict"""
     train_steps = loss_curves.get("train", {}).get("step", [])
     train_loss = loss_curves.get("train", {}).get("loss", [])
     dev_steps = loss_curves.get("dev", {}).get("step", [])
@@ -45,9 +43,7 @@ def plot_loss_curves_nested(loss_curves: dict, save_dir: Path, model_family: str
 
 
 def plot_loss_curves_flat(loss_curves: dict, save_dir: Path, model_family: str = "logreg") -> None:
-    """
-    Plot train loss and dev loss from flat saved loss_curves dict
-    """
+    """Plot train loss and dev loss from saved loss_curves dict"""
     train_loss = loss_curves.get("train_loss", [])
     dev_loss = loss_curves.get("dev_loss", [])
 
@@ -89,11 +85,9 @@ def plot_loss_curves_flat_comparison(
     loss_curves_2: dict,
     label_1: str,
     label_2: str,
-    save_dir: str | Path | None = None,
+    save_dir: Path
 ) -> None:
-    """
-    Plot two flat loss_curves dicts in one figure for comparison.
-    """
+    """Plot two loss_curves dicts in one figure for comparison"""
     train_loss_1 = loss_curves_1.get("train_loss", [])
     dev_loss_1 = loss_curves_1.get("dev_loss", [])
 

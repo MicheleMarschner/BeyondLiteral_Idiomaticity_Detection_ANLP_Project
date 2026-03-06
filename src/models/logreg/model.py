@@ -178,10 +178,6 @@ class LogRegRunner:
     def initialize(self, params: Dict[str, Any], seed: int, model_family: str) -> LogisticRegression:
         """Create a LogisticRegression instance from hyperparameters"""
 
-        print("learning_rate", params["learning_rate"])
-        print("num_iterations", params["num_iterations"])
-        print("lambda_reg", params["lambda_reg"])
-
         model = LogisticRegression(
             learning_rate=params.get("learning_rate", 0.01),
             num_iterations=params.get("num_iterations", 1000),
@@ -220,7 +216,6 @@ class LogRegRunner:
 
         # Run through hyperparameter grid
         for i, params in enumerate(ParameterGrid(param_grid)):
-            print()
             train_data, dev_data, featurizer = self.prepare_features(params=params, config=config, train_df=train_df, test_df=dev_df)
             X_train, y_train = (train_data[0], train_data[1])
             X_dev, y_dev = (dev_data[0], dev_data[1])
