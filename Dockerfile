@@ -5,12 +5,7 @@ WORKDIR /app
 # System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
-    curl \
  && rm -rf /var/lib/apt/lists/*
-
-# script to retrieve experiments folder
-COPY docker/download_experiments.sh /usr/local/bin/download_experiments.sh
-RUN chmod +x /usr/local/bin/download_experiments.sh
 
 # Copy project metadata first
 COPY pyproject.toml README.md /app/    
