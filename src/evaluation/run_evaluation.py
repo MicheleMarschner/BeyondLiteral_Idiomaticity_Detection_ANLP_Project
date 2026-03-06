@@ -11,7 +11,6 @@ def flatten_run(experiment_dir: Path) -> list[dict]:
 
     exp_config = read_json(experiment_dir / "experiment_config.json")
     metrics = read_json(experiment_dir / "metrics.json")
-
     base = extract_run_base(experiment_dir)
 
     rows = []
@@ -22,7 +21,7 @@ def flatten_run(experiment_dir: Path) -> list[dict]:
 
         rows.append({
             **base,
-            "eval_language": "overall",
+            "eval_language": "Joint",
             "accuracy": overall_metrics.get("accuracy"),
             "macro_f1": overall_metrics.get("macro_f1"),
             "macro_precision": overall_metrics.get("macro_precision"),
@@ -90,6 +89,7 @@ def create_evaluation_overview(experiments_root, results_root) -> pd.DataFrame:
     df.to_csv(results_root / "master_metrics_long.csv", index=False)
 
     return df
+
 
 def run_evaluation():
     """Runs evaluation reporting and writes the master metrics table to the results directory"""

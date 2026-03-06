@@ -1,6 +1,7 @@
 import numpy as np
-from scipy.sparse import csr_matrix
 import pandas as pd
+
+from utils.helper import read_csv_data
 
 
 def save_logreg_feature_weights(
@@ -45,7 +46,7 @@ def top_features_by_class(path: str, k: int = 30) -> tuple[pd.DataFrame, pd.Data
       - idiomatic (class 0): most negative weights
       - literal  (class 1): most positive weights
     """
-    df = pd.read_csv(path)
+    df = read_csv_data(path)
 
     if "weight" not in df.columns or "feature" not in df.columns:
         raise ValueError("CSV must contain at least 'feature' and 'weight' columns.")
