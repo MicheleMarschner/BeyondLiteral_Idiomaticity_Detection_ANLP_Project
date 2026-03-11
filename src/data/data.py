@@ -5,14 +5,12 @@ from pathlib import Path
 
 from utils.helper import read_csv_data
 from config import MIN_TRAIN, MIN_DEV, MIN_TEST, MIN_PER_CLASS_TRAIN, MIN_PER_CLASS_DEV, MIN_PER_CLASS_TEST
-
-# import functions required for building the input variant
-from input.ner import apply_ner_batch
-from input.glosses import get_glosses
+from data.ner import apply_ner_batch
+from data.glosses import get_glosses
 
 
-def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
-    """Create the model input text for this config and store it in the `input` column"""
+def _apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
+    """Create the model input text for this config and store it in the input column"""
 
     df = df.copy()
     
@@ -97,8 +95,8 @@ def apply_input_variant(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFram
     return df
 
 
-def filter_by_language_mode(train_data, dev_data, test_data, config):
-    """Filter splits by language mode: per-language, EN→PT cross-lingual, or multilingual (no filter, joint)."""
+def _filter_by_language_mode(train_data, dev_data, test_data, config):
+    """Filter splits by language mode: per-language, cross-lingual, or multilingual"""
     
     mode = config["language_mode"]
 
@@ -135,7 +133,7 @@ def load_data_splits(config: Dict[str, Any], data_dir: Path) -> Tuple[pd.DataFra
     dev_data = read_csv_data(dev_data_path)
     test_data = read_csv_data(test_data_path)
 
-    train_data, dev_data, test_data = filter_by_language_mode(train_data, dev_data, test_data, config)
+    train_data, dev_data, test_data = _filter_by_language_mode(train_data, dev_data, test_data, config)
     
     return train_data, dev_data, test_data
 
@@ -149,14 +147,14 @@ def build_inputs_for_splits(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Apply the configured input variant to train/dev/test splits and return the updated DataFrames"""
 
-    train_data = apply_input_variant(train_data, config)
-    dev_data = apply_input_variant(dev_data, config)
-    test_data = apply_input_variant(test_data, config)
+    train_data = _apply_input_variant(train_data, config)
+    dev_data = _apply_input_variant(dev_data, config)
+    test_data = _apply_input_variant(test_data, config)
 
     return train_data, dev_data, test_data
 
 
-def _label_counts(df: pd.DataFrame, label_col: str = "label") -> dict[int, int]: # changed label_col default to "label" according to the data files, was "Label" before
+def _label_counts(df: pd.DataFrame, label_col: str = "label") -> dict[int, int]: 
     """Return label frequencies as dict"""
 
     vc = df[label_col].value_counts().to_dict()
@@ -168,7 +166,7 @@ def compute_and_check_split_stats(
     dev_df: pd.DataFrame,
     test_df: pd.DataFrame,
     language: str,
-    label_col: str = "label",  # changed label_col default to "label" according to the data files, was "Label" before
+    label_col: str = "label",  
 ) -> Tuple[dict[str, dict], bool, list[str]]:
     """Summarize split sizes and per-split label counts and checks if sample size is enough to run the experiment"""
 

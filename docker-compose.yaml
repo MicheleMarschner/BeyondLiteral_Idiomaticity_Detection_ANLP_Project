@@ -1,5 +1,5 @@
 services:
-  runner_train:
+  train:
     build: .
     volumes:
       - ./data:/app/data:ro
@@ -8,10 +8,18 @@ services:
       - ./results:/app/results
     command: ["train", "/app/src/experiments/experiments_template.py"]
 
-  runner_eval:
+  eval:
     build: .
     volumes:
       - ./data:/app/data:ro
       - ./experiments:/app/experiments
       - ./results:/app/results
-    command: ["evaluate", "/app/experiments"]
+    command: ["evaluate"]
+
+  analyse:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./experiments:/app/experiments
+      - ./results:/app/results
+    command: ["analyse"]

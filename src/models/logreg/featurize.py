@@ -25,7 +25,7 @@ class MyTfidfVectorizer:
         smooth_idf: bool = True,
         sublinear_tf: bool = False
     ) -> None:
-        """Simple TF-IDF vectorizer (sparse output)."""
+        """Simple TF-IDF vectorizer (sparse output)"""
 
         self.ngrams = ngrams
         self.min_df = min_df
@@ -209,7 +209,7 @@ class TfidfWeightedWord2VecVectorizer(BaseEstimator, TransformerMixin):
         negative=10,
         epochs=10,
         seed=42,
-        workers=1,                # enforces a deterministic behavior
+        workers=1,                # deterministic behavior
         tfidf_min_df=2,
         tfidf_max_df=0.95,
         tfidf_norm=None,          # None preserves raw tfidf magnitudes as weights

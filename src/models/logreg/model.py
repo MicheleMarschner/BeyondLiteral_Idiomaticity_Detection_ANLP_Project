@@ -7,9 +7,9 @@ from typing import Dict, Tuple, Any
 import pandas as pd
 
 from utils.helper import set_seeds
-from models.logreg_bare_metal.featurize import build_featurizer
+from models.logreg.featurize import build_featurizer
 from evaluation.metrics import compute_metrics
-from models.logreg_bare_metal.param_grid import tfidf_param_grid, word2vec_param_grid
+from models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
 
 
 class LogisticRegression:
@@ -119,7 +119,7 @@ class LogisticRegression:
 
                 print(f"Iteration {epoch}: train {train_loss:.6f} | dev {dev_loss:.6f}")
                 
-                metrics = compute_metrics(dev_preds, y_dev)
+                metrics = compute_metrics(y_dev, dev_preds)
                 macro_f1 = metrics['macro_f1']
 
                 if macro_f1 > best_f1:
@@ -229,7 +229,7 @@ class LogRegRunner:
 
             best_dev_f1, loss_curves = model.fit(config, X_train, y_train, X_dev, y_dev)
 
-            results.append({**params, "dev_macro_f1": best_dev_f1})
+            results.append({**params, "best_dev_macro_f1": best_dev_f1})
 
             if best_dev_f1 > best_f1:
                 best_f1 = best_dev_f1
