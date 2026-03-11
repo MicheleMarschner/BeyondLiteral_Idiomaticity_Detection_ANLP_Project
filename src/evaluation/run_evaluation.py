@@ -6,6 +6,18 @@ from evaluation.reporting import extract_run_base
 from utils.helper import ensure_dir, read_json
 
 
+def _extract_eval_language(exp_config: dict) -> str:
+    """Return the evaluation language label for one run config."""
+    mode = exp_config.get("language_mode")
+    language = exp_config.get("language")
+
+    if mode == "cross_lingual" and isinstance(language, str):
+        langs = [x.strip() for x in language.split(",") if x.strip()]
+        return langs[-1] if langs else "unknown"
+
+    return str(language)
+
+
 def flatten_run(experiment_dir: Path) -> list[dict]:
     """Flattens one run into metric rows (overall + per-language if available), with base metadata attached"""
 
@@ -53,7 +65,7 @@ def flatten_run(experiment_dir: Path) -> list[dict]:
 
         rows.append({
             **base,
-            "eval_language": str(exp_config.get("language")),
+            "eval_language": _extract_eval_language(exp_config),
             "accuracy": flat_metrics.get("accuracy"),
             "macro_f1": flat_metrics.get("macro_f1"),
             "macro_precision": flat_metrics.get("macro_precision"),
