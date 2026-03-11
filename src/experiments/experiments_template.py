@@ -14,12 +14,12 @@ class ExperimentTemplate:
 
 
 EXPERIMENTS = ExperimentTemplate(
-    settings=["one_shot"],
-    language_mode="per_language",
-    languages=["EN", "PT"],
+    settings=["zero_shot"],
+    language_mode="cross_lingual",
+    languages=["EN,PT"],
     input_variant=[
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []},
     ],
-    model_families=["logreg_tfidf", "logreg_word2vec"],
+    model_families=["logreg_tfidf"],
     seeds=[51]
 )

@@ -126,10 +126,14 @@ def build_experiment_identifier(experiment_config: Dict[str, Any]) -> str:
     model_family = experiment_config['model_family']
     seed = experiment_config['seed']
     input_variant = experiment_config['input_variant']  # this is a dict
-
     input_str = build_input_str(input_variant)
 
+    if experiment_config['language_mode'] == "cross_lingual":
+        return f"cross__{setting}__{language}__{input_str}__{model_family}__seed{seed}"
+    
     return f"{setting}__{language}__{input_str}__{model_family}__seed{seed}"
+
+    
     
 
 def create_experiment_dir(experiment_config: Dict[str, Any], run_dir: Path, overwrite: bool=False) -> Path:

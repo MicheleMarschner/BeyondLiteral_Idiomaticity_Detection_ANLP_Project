@@ -107,12 +107,19 @@ def _filter_by_language_mode(train_data, dev_data, test_data, config):
         test_data  = test_data[test_data["Language"] == lang].copy()
 
     elif mode == "cross_lingual":
-        train_data = train_data[train_data["Language"] == "EN"].copy()
-        dev_data   = dev_data[dev_data["Language"] == "EN"].copy()
-        test_data  = test_data[test_data["Language"] == "PT"].copy()
+        langs = [x.strip() for x in config["language"].split(",")]
+        train_langs = langs[:-1]
+        test_lang = langs[-1]
+
+        train_data = train_data[train_data["Language"].isin(train_langs)].copy()
+        dev_data   = dev_data[dev_data["Language"].isin(train_langs)].copy()
+        test_data  = test_data[test_data["Language"] == test_lang].copy()
 
     elif mode == "multilingual":
-        pass
+        langs = [x.strip() for x in config["language"].split(",") if x.strip()]
+        train_data = train_data[train_data["Language"].isin(langs)].copy()
+        dev_data   = dev_data[dev_data["Language"].isin(langs)].copy()
+        test_data  = test_data[test_data["Language"].isin(langs)].copy()
 
     else:
         raise ValueError(f"Unknown language_mode: {mode}")
