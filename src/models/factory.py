@@ -1,8 +1,7 @@
 from typing import Any, Dict
 
-from models.logreg_bare_metal.model import LogRegRunner
 from models.BERTs.BERTRunner import BERTRunner
-# from models.logreg.model import LogRegRunner
+from models.logreg.model import LogRegRunner
 
 RUNNERS: Dict[str, Any] = {
     "logreg_tfidf": LogRegRunner,

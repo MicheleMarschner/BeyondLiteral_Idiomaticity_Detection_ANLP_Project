@@ -82,7 +82,6 @@ def read_json(path: Path) -> Any:
 
 def read_csv_data(
     csv_path: str | Path,
-    *,
     encoding: str = "utf-8",
 ) -> pd.DataFrame:
     """Read a CSV into a DataFrame"""
@@ -163,24 +162,15 @@ def to_numpy_float(y: Sequence[Any]) -> np.ndarray:
     return arr.astype(float)
 
 
-def get_ids_by_pair(
-    df: pd.DataFrame,
-    types_df: pd.DataFrame,
-    col1: str,
-    col2: str,
-    id_col: str = "ID",
-) -> Sequence:
-    """
-    Same behavior, implemented via merge.
-    """
-    if id_col not in df.columns:
-        raise ValueError(f"{id_col=} not in df")
-    for c in (col1, col2):
-        if c not in df.columns:
-            raise ValueError(f"{c=} not in df")
-        if c not in types_df.columns:
-            raise ValueError(f"{c=} not in types_df")
+def copy_original_dataset(src_file: Path, dst_file: Path, overwrite: bool = False) -> Path:
+    """Copy a dataset file to an analysis location"""
 
-    keys = types_df[[col1, col2]].drop_duplicates()
-    matched = df.merge(keys, on=[col1, col2], how="inner")
-    return matched[id_col].tolist()
+    if not src_file.exists():
+        raise FileNotFoundError(f"Source file not found: {src_file}")
+
+
+    if dst_file.exists() and not overwrite:
+        raise FileExistsError(f"Destination file already exists: {dst_file} (set overwrite=True)")
+
+    shutil.copy2(src_file, dst_file)  # copy2 keeps timestamps/metadata
+    return dst_file
