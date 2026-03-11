@@ -39,7 +39,6 @@ def tokenize_input(
     dev_dataset = Dataset.from_pandas(dev_data)
 
     tokenizer = AutoTokenizer.from_pretrained(params["model_identifier"])
-    specials = {"additional_special_tokens": ["<MWE>", "</MWE>"]}
     tokenizer.add_special_tokens({"additional_special_tokens": ["<MWE>", "</MWE>"]})
 
     max_length = int(params["max_length"])
