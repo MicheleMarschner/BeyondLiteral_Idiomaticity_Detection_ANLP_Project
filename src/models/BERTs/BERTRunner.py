@@ -139,7 +139,7 @@ class BERTRunner:
             model_id = "bert-base-multilingual-cased"
             param_grid = mBERT_grid
         elif base_family == "modernBERT": 
-            model_id = "answerdotai/ModernBERT-large"
+            model_id = "answerdotai/ModernBERT-base"
             param_grid = modernBERT_grid
         else:
             raise ValueError(f"Unknown model_family: {model_family}")
