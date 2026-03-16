@@ -43,15 +43,6 @@ Cleaning steps:
 - Replacement of missing values (NaN in Next column → " ")
 
 
-After cleaning:
-
-No remaining NaN values
-
-No duplicate rows
-
-No suspicious Unicode characters
-
-
 
 ## Overlap Analysis
 
