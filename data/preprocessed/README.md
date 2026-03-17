@@ -40,7 +40,7 @@ Cleaning steps:
 
 - Whitespace normalization
 
-- Replacement of missing values (NaN in Next column → " ")
+- Replacement of missing values (NaN in the Next column -> " ")
 
 
 
@@ -82,13 +82,15 @@ GL: 63 samples
 
 ## Create train/dev/test splits:
 
-- 50 unique MWEs → Dev
+- Split based on Language and MWE:
 
-- 50 unique MWEs → Test
+     - 50 unique MWEs -> Dev
 
-- Remaining 386 MWEs → Train
+     - 50 unique MWEs -> Test
 
-- Group by Language and MWE
+     - Remaining 386 MWEs -> Train
+
+
 
 - Ensure no MWE overlap across splits
 
@@ -142,7 +144,7 @@ For each MWE in dev/test:
 
      - Match label
 
-     - Come from an MWE that appears exactly the same number of times in train
+     - Come from an MWE that appears exactly the same number of moved samples in train
 
 This ensures:
 
@@ -153,8 +155,6 @@ This ensures:
 - Split sizes remain unchanged
 
 
-No MWE overlap across One-Shot split sets are checked.
-
 
 Splitted datasets:
 - one_shot_train.csv
@@ -163,27 +163,20 @@ Splitted datasets:
 
 # Alternative Stratified Experiment (Label-Aware)
 We also experimented with stratifying MWEs by label distribution:
-Compute label ratio per MWE
+Compute "label ratio" per MWE
+     - only_0
 
-Categorize into:
+     - mixed
 
-only_0
+     - only_1
 
-mostly_0
-
-balanced
-
-mostly_1
-
-only_1
-
-Perform stratified splitting by label bucket
+Perform stratified splitting by label ratio
 
 Result:
 
-Distribution nearly identical to proportional split
+Distribution nearly identical to primary zero-shot splits
 
-Final experiments continued with proportional zero-shot split
+Final experiments continued with primary zero-shot splits.
 
 # Data Integrity Checks
 
