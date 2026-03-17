@@ -163,7 +163,8 @@ Splitted datasets:
 
 # Alternative Stratified Experiment (Label-Aware)
 We also experimented with stratifying MWEs by label distribution:
-Compute "label ratio" per MWE
+Compute "label ratio" per MWE:
+
      - only_0
 
      - mixed
