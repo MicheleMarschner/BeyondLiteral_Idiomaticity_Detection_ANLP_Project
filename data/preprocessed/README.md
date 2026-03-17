@@ -146,13 +146,16 @@ For each MWE in dev/test:
 
      - Come from an MWE that appears exactly the same number of moved samples in train
 
-This ensures:
+However, for 2 PT MWEs and 40 EN MWEs, there was not sufficient samples to move from train set to dev and test sets all in all. But still the distribution of samples between the zero-shot sets and one-shot sets are so close to each other as shown below:
 
-- Balanced exposure in training
-
-- Stable label distribution
-
-- Split sizes remain unchanged
+| Data Sets              | MWEs | English | Portuguese | Galician | All  |
+|------------------------|------|---------|------------|----------|------|
+| Zero Shot train_set    | 386  | 3160    | 1215       | 51       | 4426 |
+| Zero Shot dev_set      | 50   | 369     | 141        | 6        | 516  |
+| Zero Shot test_set     | 50   | 424     | 207        | 6        | 637  |
+| One Shot train_set     | 434  | 3200    | 1217       | 51       | 4468 |
+| One Shot dev_set       | 82   | 363     | 141        | 6        | 510  |
+| One Shot test_set      | 70   | 390     | 205        | 6        | 601  |
 
 
 
