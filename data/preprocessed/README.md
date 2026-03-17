@@ -165,11 +165,11 @@ Splitted datasets:
 We also experimented with stratifying MWEs by label distribution:
 Compute "label ratio" per MWE:
 
-     - only_0
+- only_0
 
-     - mixed
+- mixed
 
-     - only_1
+- only_1
 
 Perform stratified splitting by label ratio
 
