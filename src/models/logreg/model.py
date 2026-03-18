@@ -71,6 +71,8 @@ class LogisticRegression:
         best_epoch = 0
         train_losses = []
         dev_losses = []
+        dev_macro_f1s = []
+        steps = []
 
         # Train Loop
         for epoch in range(self.num_iter):
@@ -106,6 +108,7 @@ class LogisticRegression:
             if epoch % 50 == 0:
                 train_loss = self._compute_loss(y_train, y_proba)
                 train_losses.append(train_loss)
+                steps.append(epoch)
 
                 # dev loss
                 #z_dev = np.dot(X_dev, self.weights) + self.bias
@@ -121,6 +124,7 @@ class LogisticRegression:
                 
                 metrics = compute_metrics(y_dev, dev_preds)
                 macro_f1 = metrics['macro_f1']
+                dev_macro_f1s.append(macro_f1)
 
                 if macro_f1 > best_f1:
                     best_f1 = macro_f1
@@ -138,9 +142,12 @@ class LogisticRegression:
                         break
         
         return best_f1, {
+            "train_steps": steps,
             "train_loss": train_losses,
+            "dev_steps": steps,
             "dev_loss": dev_losses,
-            "best_epoch": best_epoch,
+            "dev_macro_f1": dev_macro_f1s,
+            "best_step": best_epoch,
         }
     
 

@@ -27,7 +27,10 @@ dependencies = [
   "huggingface-hub>=0.23",
   "regex>=2023.12.25",
   "safetensors>=0.4.3",
-  "seaborn==0.13.2"
+  "seaborn==0.13.2",
+  "nltk>=3.8",
+  "wandb==0.23.1",
+  "python-dotenv==1.2.1"
 ]
 
 [tool.setuptools]
