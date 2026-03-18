@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH -J anlp_setup
+#SBATCH -p cpu-batch
+#SBATCH --account=sci-demelo-computer-vision
+#SBATCH -t 01:00:00
+#SBATCH -o logs/setup_%j.out
+#SBATCH -e logs/setup_%j.err
+
+source ~/conda3/etc/profile.d/conda.sh
+conda activate anlp
+cd ~/project/beyondliteral_idiomaticity_detection_anlp_project
+python -m pip install -e .

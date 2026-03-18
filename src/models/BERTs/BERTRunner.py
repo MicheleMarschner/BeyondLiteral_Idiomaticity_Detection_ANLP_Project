@@ -13,6 +13,7 @@ from typing import Dict, Sequence, Tuple, Any, List
 
 from utils.helper import set_seeds
 from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
+from logging.wandb_logger import is_wandb_enabled
 
 
 def tokenize_function(
@@ -54,7 +55,6 @@ def tokenize_input(
         fn_kwargs={"tokenizer": tokenizer, "max_length": max_length},
     )
 
-    # rename label --> labels (HF expects this)
     if "label" in train_dataset.column_names:
         train_dataset = train_dataset.rename_column("label", "labels")
     if "label" in dev_dataset.column_names:
@@ -198,7 +198,8 @@ class BERTRunner:
                     seed=config['seed'],
                     logging_dir=str(run_dir / "logs"),
                     logging_steps=50,
-                    report_to=["none"]
+                    run_name=run_name,
+                    report_to="wandb" if is_wandb_enabled() else "none",
                 )
 
                 trainer = Trainer(
@@ -212,9 +213,10 @@ class BERTRunner:
                 trainer.train()
                 best_dev_f1 = float(trainer.state.best_metric) 
 
-                # saving the loss curves
+                # saving the loss curves and f1 scores
                 train_steps, train_loss = [], []
                 eval_steps, eval_loss = [], []
+                dev_macro_f1 = []
 
                 for row in trainer.state.log_history:
                     if "loss" in row and "step" in row:
@@ -223,10 +225,16 @@ class BERTRunner:
                     if "eval_loss" in row and "step" in row:
                         eval_steps.append(row["step"])
                         eval_loss.append(row["eval_loss"])
+                    if "eval_macro-F1" in row and "step" in row:
+                        dev_macro_f1.append(row["eval_macro-F1"])
 
                 loss_curves = {
-                    "train": {"step": train_steps, "loss": train_loss},
-                    "dev":  {"step": eval_steps,  "loss": eval_loss},
+                    "train_steps": train_steps,
+                    "train_loss": train_loss,
+                    "dev_steps": eval_steps,
+                    "dev_loss": eval_loss,
+                    "dev_macro_f1": dev_macro_f1,
+                    "best_step": trainer.state.global_step,
                 }
 
                 results.append({

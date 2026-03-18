@@ -68,7 +68,7 @@ NLTK_DATA_DIR = PROJECT_ROOT / ".nltk_data"
 nltk.data.path.insert(0, str(NLTK_DATA_DIR))
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+WANDB_ENABLED = True
 
 # Data configs
 MIN_TRAIN = 500
