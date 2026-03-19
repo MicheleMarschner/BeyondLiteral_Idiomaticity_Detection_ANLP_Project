@@ -161,7 +161,7 @@ def update_wandb_best_params(run, best_params: dict | None) -> None:
 
 
 def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
-    """Update W&B summary with best-step and best dev macro-F1 from saved curves"""
+    """Update W&B summary with best-step from saved curves"""
     if run is None or best_curves is None:
         return
 
