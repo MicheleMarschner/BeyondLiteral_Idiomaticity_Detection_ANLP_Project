@@ -116,7 +116,7 @@ docker compose run --rm analyse
 **Note on eval and analyse**: 
 When running `eval` or `analyse`, the container will automatically attempt to download the experiments archive if no local experiment folders are present.
 
-f the automatic download fails, manually download the archive from [here](https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing), ensure it is available as a .tar.gz file, and extract it in the project root.
+If the automatic download fails, manually download the archive from [here](https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing), ensure it is available as a .tar.gz file, and extract it in the project root.
 
 ---
 

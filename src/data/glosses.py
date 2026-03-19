@@ -1,11 +1,6 @@
 from nltk.corpus import wordnet as wn
 from typing import List
 
-#nltk.download('wordnet')
-#nltk.download('omw-1.4')
-
-# print(wn.langs())
-
 def get_glosses(word, language, num=2)-> List[str]:
     """
     Retrieve up to 'num' glosses (definitions) for a word.

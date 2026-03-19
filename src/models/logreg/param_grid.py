@@ -1,4 +1,4 @@
-
+## Final parameter grid and results of parameter tuning on the baseline configuration
 tfidf_param_grid = {
     # featurizer (MyTfidfVectorizer)
     "ngrams": [(1, 2)],

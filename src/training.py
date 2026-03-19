@@ -66,6 +66,7 @@ def get_model(
             wandb_run=wandb_run
         )
 
+        # save artifacts locally
         tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
@@ -73,6 +74,7 @@ def get_model(
         pd.DataFrame(tuning_results).to_csv(experiment_dir / "tuning_results.csv", index=False)
         write_json(experiment_dir / "learning_curves.json", best_curves)
 
+        # save artifacts to wandb
         update_wandb_best_params(wandb_run, best_params)
         update_wandb_best_curves_summary(wandb_run, best_curves)
         log_wandb_tuning_results_table(wandb_run, tuning_results)
