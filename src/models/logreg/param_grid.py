@@ -19,7 +19,7 @@ word2vec_param_grid = {
     # Word2Vec training
     "vector_size": [300],
     "window": [5],
-    "negative": [5, 10],
+    "negative": [5],
     "min_count": [2],
     "epochs": [30],
 
