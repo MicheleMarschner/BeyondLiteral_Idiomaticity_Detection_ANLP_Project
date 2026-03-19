@@ -228,6 +228,11 @@ def log_wandb_artifacts(run, run_dir: Path) -> None:
     if run is None:
         return
 
+    try:
+        import wandb
+    except ImportError:
+       return
+
     updated_name = (
         f"{run.name}-outputs"
         .replace(",", "-")
