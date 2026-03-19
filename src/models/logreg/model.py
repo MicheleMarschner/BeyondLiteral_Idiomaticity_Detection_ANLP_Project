@@ -45,6 +45,7 @@ class LogisticRegression:
         y_train: Any, 
         X_dev: Any, 
         y_dev: Any, 
+        wandb_run: Any = None,
         threshold: float=0.5
     ) -> Tuple[float, float, Dict[str, Any]]:
         """Train the model and return best dev macro-F1, best train macro-F1, and learning curves"""
@@ -115,6 +116,16 @@ class LogisticRegression:
                 train_preds = (y_proba >= threshold).astype(int)
                 train_metrics = compute_metrics(y_train, train_preds)
                 train_macro_f1 = train_metrics["macro_f1"]
+
+                if wandb_run is not None:
+                    wandb_run.log(
+                        {
+                            "train_loss": float(train_loss),
+                            "dev_loss": float(dev_loss),
+                            "dev_macro_f1": float(dev_macro_f1),
+                        },
+                        step=int(epoch),
+                    )
 
                 if dev_macro_f1 > best_dev_macro_f1:
                     best_dev_macro_f1 = dev_macro_f1
