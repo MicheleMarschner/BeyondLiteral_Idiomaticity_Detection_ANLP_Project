@@ -1,12 +1,7 @@
-
 import os
 from pathlib import Path
 from typing import Any
 from dotenv import load_dotenv
-import wandb
-import pandas as pd
-from wandb.sdk.wandb_run import Run
-import json
 from transformers import TrainerCallback
 
 from config import WANDB_ENABLED
@@ -14,8 +9,9 @@ from config import WANDB_ENABLED
 load_dotenv()
 
 
+
 class WandbDevCurveCallback(TrainerCallback):
-    """Log train/dev curves to W&B during Trainer runs"""
+    """Log train/dev curves to W&B during Trainer runs."""
 
     def __init__(self, wandb_run=None):
         self.wandb_run = wandb_run
@@ -47,21 +43,26 @@ class WandbDevCurveCallback(TrainerCallback):
 
 
 def is_wandb_enabled() -> bool:
-    """Return whether W&B logging is enabled globally"""
+    """Return whether W&B logging is enabled globally."""
     return bool(WANDB_ENABLED)
 
 
 def init_wandb_run(config: dict[str, Any], run_dir: Path):
-    """Initialize a W&B run if enabled, otherwise return None"""
+    """Initialize a W&B run if enabled, otherwise return None."""
     if not is_wandb_enabled():
         return None
 
     WANDB_API_KEY = os.getenv("WANDB_API_KEY")
-    if WANDB_API_KEY is None:
-        raise ValueError(
-            "W&B API key is not set. Define WANDB_API_KEY in your .env file."
-        )
-    
+    if not WANDB_API_KEY:
+        print("[wandb] WANDB_API_KEY not set. Continuing without W&B.")
+        return None
+
+    try:
+        import wandb
+    except ImportError:
+        print("[wandb] wandb is not installed. Continuing without W&B.")
+        return None
+
     WANDB_ENTITY = os.getenv("WANDB_ENTITY")
     WANDB_PROJECT = os.getenv("WANDB_PROJECT")
 
@@ -90,26 +91,31 @@ def init_wandb_run(config: dict[str, Any], run_dir: Path):
         f"__seed{config.get('seed')}"
     )
 
-    run = wandb.init(
-        project=project,
-        entity=entity,
-        group=group,
-        job_type=config.get("model_family"),
-        name=run_name,
-        config={
-            "setting": config.get("setting"),
-            "language_mode": config.get("language_mode"),
-            "language": config.get("language"),
-            "model_family": config.get("model_family"),
-            "seed": config.get("seed"),
-            "context": input_variant.get("context"),
-            "features": input_variant.get("features"),
-            "include_mwe_segment": input_variant.get("include_mwe_segment"),
-            "transform": input_variant.get("transform"),
-        },
-        dir=str(run_dir),
-    )
-    return run
+    try:
+        run = wandb.init(
+            project=project,
+            entity=entity,
+            group=group,
+            job_type=config.get("model_family"),
+            name=run_name,
+            config={
+                "setting": config.get("setting"),
+                "language_mode": config.get("language_mode"),
+                "language": config.get("language"),
+                "model_family": config.get("model_family"),
+                "seed": config.get("seed"),
+                "context": input_variant.get("context"),
+                "features": input_variant.get("features"),
+                "include_mwe_segment": input_variant.get("include_mwe_segment"),
+                "transform": input_variant.get("transform"),
+            },
+            dir=str(run_dir),
+        )
+        return run
+
+    except Exception as e:
+        print(f"[wandb] Initialization failed ({e}). Continuing without W&B.")
+        return None
 
 
 def update_wandb_split_stats_summary(
@@ -144,7 +150,7 @@ def update_wandb_split_stats_summary(
 
 
 def update_wandb_best_params(run, best_params: dict | None) -> None:
-    """Update W&B config with the selected best hyperparameters"""
+    """Update W&B config with the selected best hyperparameters."""
     if run is None or best_params is None:
         return
 
@@ -155,7 +161,7 @@ def update_wandb_best_params(run, best_params: dict | None) -> None:
 
 
 def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
-    """Update W&B summary with best-step and best dev macro-F1 from saved curves"""
+    """Update W&B summary with best-step and best dev macro-F1 from saved curves."""
     if run is None or best_curves is None:
         return
 
@@ -169,6 +175,12 @@ def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
 def log_wandb_tuning_results_table(run, tuning_results: list[dict] | None) -> None:
     """Log tuning results as a W&B table."""
     if run is None or not tuning_results:
+        return
+
+    try:
+        import pandas as pd
+        import wandb
+    except ImportError:
         return
 
     tuning_df = pd.DataFrame(tuning_results)
@@ -212,8 +224,13 @@ def log_wandb_final_metrics(run, metrics: dict) -> None:
 
 
 def log_wandb_artifacts(run, run_dir: Path) -> None:
-    """Upload selected saved output files as a W&B artifact"""
+    """Upload selected saved output files as a W&B artifact."""
     if run is None:
+        return
+
+    try:
+        import wandb
+    except ImportError:
         return
 
     artifact = wandb.Artifact(name=f"{run.name}-outputs", type="run_outputs")
@@ -235,6 +252,6 @@ def log_wandb_artifacts(run, run_dir: Path) -> None:
 
 
 def finish_wandb_run(run) -> None:
-    """Finish a W&B run if it exists"""
+    """Finish a W&B run if it exists."""
     if run is not None:
         run.finish()
