@@ -7,7 +7,6 @@ build/
 .venv/
 .env
 
-.nltk_data/
 
 runs/
 .DS_Store
@@ -15,8 +14,14 @@ runs/
 **/*.pth
 **/*.pth.tar
 
+# Weights & Biases
+wandb/
+.wandb/
+
+.nltk_data/
+
 ./src/analysis_submodule
 experiments
 evaluation.md
 experiments.tar.gz
-experiments_tar.mdlogs/
+experiments_tar.md
