@@ -111,6 +111,12 @@ def init_wandb_run(config: dict[str, Any], run_dir: Path):
             },
             dir=str(run_dir),
         )
+
+        # to separately log the best and not the last saved value
+        run.define_metric("train_loss", summary="none")
+        run.define_metric("dev_loss", summary="none")
+        run.define_metric("dev_macro_f1", summary="none")
+
         return run
 
     except Exception as e:
