@@ -228,12 +228,13 @@ def log_wandb_artifacts(run, run_dir: Path) -> None:
     if run is None:
         return
 
-    try:
-        import wandb
-    except ImportError:
-        return
-
-    artifact = wandb.Artifact(name=f"{run.name}-outputs", type="run_outputs")
+    updated_name = (
+        f"{run.name}-outputs"
+        .replace(",", "-")
+        .replace(" ", "_")
+        .replace("/", "-")
+    )
+    artifact = wandb.Artifact(name=updated_name, type="run_outputs")
 
     for filename in [
         "metrics.json",
