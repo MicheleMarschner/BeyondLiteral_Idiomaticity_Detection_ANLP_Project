@@ -21,3 +21,9 @@ scancel <JOBID>
 rsync -avz --progress michele.marschner@lx01.hpc.sci.hpi.de:/sc/home/michele.marschner/project/jaguar_project/experiments/round_2/kaggle_ensemble ~/Downloads/
 
 rsync -avz --progress ~/Downloads/kaggle_ensemble michele.marschner@lx01.hpc.sci.hpi.de:/sc/home/michele.marschner/project/jaguar_project/configs/_generated/
+
+
+
+find experiments -type d -path "*/mBERT"
+find experiments -type d \( -path "experiments/*__mBERT__*/mBERT" -o -path "experiments/*__mBERT__*/wandb" \) -prune -exec rm -rf {} +
+
