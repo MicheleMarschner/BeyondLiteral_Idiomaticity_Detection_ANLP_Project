@@ -6,6 +6,7 @@ import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
 from utils.helper import ensure_dir, write_json, read_json
+from logger.wandb_logger import update_wandb_best_params, update_wandb_best_curves_summary, log_wandb_tuning_results_table
 
 
 def _load_model(model_family: str, model_path: Path, best_params: Dict[str, str]) -> Union[nn.Module, Any]:
@@ -39,7 +40,8 @@ def get_model(
     experiment_dir: Path, 
     train_data: pd.DataFrame, 
     dev_data: pd.DataFrame, 
-    runner: Any
+    runner: Any,
+    wandb_run: Any = None
 ) -> Tuple[Union[nn.Module, Any], Dict[str, Any]]:
     """
     Load existing model checkpoint and results if available; otherwise train and save the 
@@ -56,7 +58,13 @@ def get_model(
         print("Model not found. Training...")
         
         # Trigger full training pipeline
-        model, tuning_results, best_params, best_curves = runner.tune(experiment_config, model_path, train_data, dev_data)
+        model, tuning_results, best_params, best_curves = runner.tune(
+            config=experiment_config,
+            model_path=model_path,
+            train_df=train_data,
+            dev_df=dev_data,
+            wandb_run=wandb_run
+        )
 
         tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
         ensure_dir(experiment_dir)
@@ -64,6 +72,10 @@ def get_model(
         write_json(experiment_dir / "tuning_results.json", tuning_results)
         pd.DataFrame(tuning_results).to_csv(experiment_dir / "tuning_results.csv", index=False)
         write_json(experiment_dir / "learning_curves.json", best_curves)
+
+        update_wandb_best_params(wandb_run, best_params)
+        update_wandb_best_curves_summary(wandb_run, best_curves)
+        log_wandb_tuning_results_table(wandb_run, tuning_results)
 
     else:    # Re-instantiate a new model and load the best weights (Frozen state)
         print("Loading existing model...")

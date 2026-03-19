@@ -13,12 +13,12 @@ from training import get_model
 from data.data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
 from config import Paths, PATHS
 from models.factory import get_model_runner
-from logging.wandb_logger import (
+from logger.wandb_logger import (
     init_wandb_run,
+    update_wandb_split_stats_summary,
     log_wandb_final_metrics,
     log_wandb_artifacts,
     finish_wandb_run,
-    log_wandb_learning_curves,
 )
 
 
@@ -118,13 +118,28 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
 
         train_df, val_df, test_df = load_data_splits(experiment_config, paths.data_preprocessed)
         split_stats, is_too_small, reasons = compute_and_check_split_stats(train_df, val_df, test_df, experiment_config['language'])
+        
+        update_wandb_split_stats_summary(
+            wandb_run,
+            split_stats,
+            is_too_small,
+            reasons,
+        )
+        
         if is_too_small:
             print(f"[skip] experiment | " + " ; ".join(reasons))
             return None
         
         train_data, val_data, test_data = build_inputs_for_splits(train_df, val_df, test_df, experiment_config)
 
-        model, best_params = get_model(experiment_config, experiment_dir, train_data, val_data, runner)
+        model, best_params = get_model(
+            experiment_config, 
+            experiment_dir, 
+            train_data, 
+            val_data, 
+            runner, 
+            wandb_run
+        )
 
         _, test_loader, _ = runner.prepare_features(
             params=best_params,
@@ -155,7 +170,6 @@ def run_single_experiment(experiment_config: Dict[str, Any], paths: Paths=PATHS,
             metrics=metrics,         
         )
 
-        log_wandb_learning_curves(wandb_run, experiment_dir)
         log_wandb_final_metrics(wandb_run, metrics)
         log_wandb_artifacts(wandb_run, experiment_dir)
 

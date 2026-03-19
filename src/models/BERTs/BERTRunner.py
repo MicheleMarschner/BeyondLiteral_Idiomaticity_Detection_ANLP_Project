@@ -3,8 +3,7 @@ from pathlib import Path
 import pandas as pd
 from transformers import (
     PreTrainedTokenizerBase, AutoModelForSequenceClassification, 
-    AutoTokenizer, PreTrainedModel, Trainer, TrainingArguments
-)
+    AutoTokenizer, PreTrainedModel, Trainer, TrainingArguments)
 from datasets import Dataset
 from sklearn.model_selection import ParameterGrid
 from sklearn.metrics import f1_score
@@ -13,7 +12,7 @@ from typing import Dict, Sequence, Tuple, Any, List
 
 from utils.helper import set_seeds
 from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
-from logging.wandb_logger import is_wandb_enabled
+from logger.wandb_logger import is_wandb_enabled, WandbDevCurveCallback
 
 
 def tokenize_function(
@@ -119,6 +118,7 @@ class BERTRunner:
         model_path: Path,
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
+        wandb_run: Any = None,
         threshold: float=0.5
     ) -> Tuple[Trainer, List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
@@ -186,8 +186,8 @@ class BERTRunner:
                     weight_decay=learning_config["weight_decay"],
 
                     # Evaluation & saving
-                    eval_strategy="epoch",
-                    save_strategy="epoch",  
+                    eval_strategy="steps",
+                    save_strategy="steps",  
                     save_total_limit=1,
                     save_only_model=True,      # avoids optimizer.pt/scheduler.pt
                     load_best_model_at_end=True,
@@ -199,7 +199,8 @@ class BERTRunner:
                     logging_dir=str(run_dir / "logs"),
                     logging_steps=50,
                     run_name=run_name,
-                    report_to="wandb" if is_wandb_enabled() else "none",
+                    #report_to="wandb" if is_wandb_enabled() else "none",
+                    report_to="none"
                 )
 
                 trainer = Trainer(
@@ -207,7 +208,8 @@ class BERTRunner:
                     args=training_args,                 
                     train_dataset=train_data,
                     eval_dataset=dev_data,
-                    compute_metrics=compute_metrics
+                    compute_metrics=compute_metrics,
+                    callbacks=[WandbDevCurveCallback(wandb_run=wandb_run)],
                 )
 
                 trainer.train()
