@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Tuple, Any
 import pandas as pd
 
-from src.models.logreg.model import LogisticRegression
+from models.logreg.model import LogisticRegression
 from utils.helper import set_seeds
 from models.logreg.featurize import build_featurizer
 from models.logreg.param_grid import tfidf_param_grid, word2vec_param_grid
