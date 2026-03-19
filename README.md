@@ -15,7 +15,7 @@ The setup was tested on macOS. It uses docker and docker compose.
 * Docker
 * docker-compose 
 
-#### 1. Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://gitup.uni-potsdam.de/marschner5/beyondliteral_idiomaticity_detection_anlp_project.git to /your_desired_path/<myDeployment>
@@ -37,6 +37,32 @@ The repository has the following high-level structure:
    └── src/                     # code (entrypoint: main.py)
    └── README.md                # main project documentation (how to run, reproduce, results)
    ```
+
+---
+## Weights & Biases
+
+The experiment runs are available in the public W&B project:
+
+**[beyondliteral_idiomaticity_detection_anlp](https://wandb.ai/michele-marschner-1-university-of-potsdam/beyondliteral_idiomaticity_detection_anlp/)**
+
+The project contains logged runs, configurations, metrics, and selected artifacts generated during the experiments. Model checkpoints are stored locally and are not uploaded to W&B.
+
+### Optional W&B Logging
+
+W&B logging is optional. The project can be run without a W&B account.  
+If you want to enable experiment tracking with W&B, create a `.env` file based on the provided example and fill in your credentials.
+
+```bash
+cp .env.example .env
+```
+
+```env
+WANDB_API_KEY=wandb_api_key
+WANDB_ENTITY=wandb_username
+WANDB_PROJECT=beyondliteral_idiomaticity_detection_anlp
+```
+
+If no valid W&B configuration is provided, the project will continue to run without W&B logging.
 
 ---
 
@@ -87,6 +113,11 @@ docker compose run --rm analyse
 *Overwrite flag*
 `--overwrite` re-runs experiments even if an experiment folder already exists. Without it an error will be thrown if you try to overvwrite
 
+**Note on eval and analyse**: 
+When running `eval` or `analyse`, the container will automatically attempt to download the experiments archive if no local experiment folders are present.
+
+f the automatic download fails, manually download the archive from [here](https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing), ensure it is available as a .tar.gz file, and extract it in the project root.
+
 ---
 
 ## Data
@@ -101,6 +132,9 @@ Expected and needed raw files in `data/raw/Data/`:
 
 The preprocessed splits are included in the repository for convenience, but they can also be re-generated using:
 `data/preprocessed/data_preprocessing_splitting.py`
+
+### Experiments Folder
+For running the 
 
 ---
 

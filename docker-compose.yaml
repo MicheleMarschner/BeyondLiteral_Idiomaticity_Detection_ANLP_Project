@@ -6,7 +6,7 @@ services:
       - ./src/experiments/experiments_template.py:/app/src/experiments/experiments_template.py:ro
       - ./experiments:/app/experiments
       - ./results:/app/results
-    command: ["train", "/app/src/experiments/experiments_template.py"]
+    command: ["python", "-m", "src.main", "train", "/app/src/experiments/experiments_template.py"]
 
   eval:
     build: .
@@ -15,8 +15,8 @@ services:
       - ./experiments:/app/experiments
       - ./results:/app/results
     environment:
-      EXPERIMENTS_URL: "https://drive.google.com/uc?export=download&id=1X_scCj_fxi7nLO-2wqFQWrAyGuwpomWE"
-    command: ["bash", "-lc", "download_experiments.sh && python -m src.main evaluate"]
+      EXPERIMENTS_URL: "https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing"
+    command: ["/usr/local/bin/download_experiments.sh", "python", "-m", "src.main", "evaluate"]
 
   analyse:
     build: .
@@ -25,5 +25,5 @@ services:
       - ./experiments:/app/experiments
       - ./results:/app/results
     environment:
-      EXPERIMENTS_URL: "https://drive.google.com/uc?export=download&id=1X_scCj_fxi7nLO-2wqFQWrAyGuwpomWE"
-    command: ["bash", "-lc", "download_experiments.sh && python -m src.main analyse"]
+      EXPERIMENTS_URL: "https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing"
+    command: ["/usr/local/bin/download_experiments.sh", "python", "-m", "src.main", "analyse"]
