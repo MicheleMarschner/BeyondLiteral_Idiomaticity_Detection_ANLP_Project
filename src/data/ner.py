@@ -25,7 +25,6 @@ def get_ner_model(lang):
             model=ner_models[lang],
             aggregation_strategy="max",
             device=DEVICE,
-            local_files_only=is_cluster_run(),
         )
 
     return _loaded_ner_models[lang]
