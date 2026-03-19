@@ -52,6 +52,7 @@ class LogisticRegression:
         y_train: Any, 
         X_dev: Any, 
         y_dev: Any, 
+        wandb_run: Any = None,
         threshold: float=0.5
     ) -> Tuple[list[float], list[float], float]:
         """Train the model; return tracked losses and best validation macro-F1"""
@@ -83,11 +84,6 @@ class LogisticRegression:
             z = np.asarray(z).ravel() + self.bias
             y_proba = self._sigmoid(z)              # Compute Score
 
-            # Gradient of negative log-likelihood (averaged)
-            #grad_likelihood = np.dot(X_train.T, (y_proba - y_train)) / n_samples 
-            #grad_reg = (self.lambda_reg / n_samples) * self.weights
-            #gradient = grad_likelihood + grad_reg
-
             error = np.asarray(y_proba).ravel() - np.asarray(y_train).ravel()   # (n_samples,)
 
             grad_likelihood = (X_train.T @ error) / n_samples                   # -> (n_features,)
@@ -97,7 +93,6 @@ class LogisticRegression:
             gradient = grad_likelihood + grad_reg    
             
             # Derivative of Loss for bias
-            #db = np.sum(y_proba - y_train) / n_samples
             db = np.mean(error)
 
             # Update Parameters
@@ -105,14 +100,12 @@ class LogisticRegression:
             self.bias -= self.lr * db
             
             # Tracking Loss
-            if epoch % 50 == 0:
+            if epoch % 20 == 0:
                 train_loss = self._compute_loss(y_train, y_proba)
                 train_losses.append(train_loss)
                 steps.append(epoch)
 
                 # dev loss
-                #z_dev = np.dot(X_dev, self.weights) + self.bias
-                #dev_proba = self._sigmoid(z_dev)
                 z_dev = X_dev @ self.weights
                 z_dev = np.asarray(z_dev).ravel() + self.bias
                 dev_proba = self._sigmoid(z_dev)
@@ -125,6 +118,16 @@ class LogisticRegression:
                 metrics = compute_metrics(y_dev, dev_preds)
                 macro_f1 = metrics['macro_f1']
                 dev_macro_f1s.append(macro_f1)
+
+                if wandb_run is not None:
+                    wandb_run.log(
+                        {
+                            "train_loss": float(train_loss),
+                            "dev_loss": float(dev_loss),
+                            "dev_macro_f1": float(macro_f1),
+                        },
+                        step=int(epoch),
+                    )
 
                 if macro_f1 > best_f1:
                     best_f1 = macro_f1
@@ -201,6 +204,7 @@ class LogRegRunner:
         model_path: Path,
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
+        wandb_run: Any = None,
         threshold: float=0.5
     ) -> Tuple[LogisticRegression, Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
@@ -234,7 +238,7 @@ class LogRegRunner:
             
             model = self.initialize(params, config['seed'], config['model_family'])
 
-            best_dev_f1, loss_curves = model.fit(config, X_train, y_train, X_dev, y_dev)
+            best_dev_f1, loss_curves = model.fit(config, X_train, y_train, X_dev, y_dev, wandb_run)
 
             results.append({**params, "best_dev_macro_f1": best_dev_f1})
 

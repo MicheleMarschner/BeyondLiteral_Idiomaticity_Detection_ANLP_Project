@@ -6,13 +6,19 @@ import nltk
 
 
 def is_colab() -> bool:
+    """Return whether the current process runs inside the colab environment"""
     return "COLAB_GPU" in os.environ or "COLAB_TPU_ADDR" in os.environ
 
 
 def is_kaggle() -> bool:
+    """Return whether the current process runs inside the kaggle environment"""
     if Path("/kaggle/input").exists():
         return True
     return False
+
+def is_cluster_run() -> bool:
+    """Return whether the current process runs inside a Slurm job"""
+    return ("SLURM_JOB_ID" in os.environ) or ("SLURM_ARRAY_TASK_ID" in os.environ)
 
 
 @dataclass(frozen=True)
