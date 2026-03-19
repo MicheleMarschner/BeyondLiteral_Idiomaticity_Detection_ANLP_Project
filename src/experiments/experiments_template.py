@@ -15,8 +15,8 @@ class ExperimentTemplate:
 
 EXPERIMENTS = ExperimentTemplate(
     settings=["zero_shot"],
-    language_mode="per_language",
-    languages=["EN"],
+    language_mode="multilingual",
+    languages=["EN,PT,GL"],
     input_variant=[
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []},
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": ["glosses"]},
