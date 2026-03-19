@@ -7,9 +7,8 @@
 #SBATCH --gpus=1
 #SBATCH --mem=16G
 #SBATCH --time=08:00:00
-#SBATCH --array=0-71%6
-#SBATCH --output=/sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/logs/array_%A_%a.out
-#SBATCH --error=/sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/logs/array_%A_%a.err
+#SBATCH --output=/sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/logs/array_%j.out
+#SBATCH --error=/sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/logs/array_%j.err
 
 source /sc/home/michele.marschner/conda3/etc/profile.d/conda.sh
 conda activate anlp
@@ -27,4 +26,3 @@ export HF_HUB_CACHE=$HOME/.cache/huggingface/hub
 
 python src/experiments/run_experiments.py \
   --experiments_path src/experiments/experiments_template.py \
-  --slurm

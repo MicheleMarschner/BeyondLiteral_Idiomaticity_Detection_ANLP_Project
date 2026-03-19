@@ -1,0 +1,287 @@
+Thu Mar 19 09:20:40 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 570.195.03             Driver Version: 570.195.03     CUDA Version: 12.8     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Tesla V100-SXM2-32GB           On  |   00000000:8A:00.0 Off |                    0 |
+| N/A   37C    P0             48W /  300W |       0MiB /  32768MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+cuda available: True
+device count: 1
+[slurm] running task_id=9 of 36
+All random seeds set to 51 for reproducibility
+Model not found. Training...
+
+All random seeds set to 51 for reproducibility
+0.9
+learning_rate 0.1
+num_iterations 5000
+lambda_reg 0.0
+All random seeds set to 51 for reproducibility
+Iteration 0: train 0.693147 | dev 0.693270
+Iteration 20: train 0.692443 | dev 0.695162
+Iteration 40: train 0.691817 | dev 0.696258
+Iteration 60: train 0.691220 | dev 0.696862
+Iteration 80: train 0.690634 | dev 0.697166
+Iteration 100: train 0.690053 | dev 0.697288
+Iteration 120: train 0.689474 | dev 0.697302
+Iteration 140: train 0.688896 | dev 0.697250
+Iteration 160: train 0.688320 | dev 0.697160
+Iteration 180: train 0.687745 | dev 0.697047
+Iteration 200: train 0.687170 | dev 0.696920
+Iteration 220: train 0.686597 | dev 0.696785
+Iteration 240: train 0.686025 | dev 0.696645
+Iteration 260: train 0.685454 | dev 0.696503
+Iteration 280: train 0.684884 | dev 0.696359
+Iteration 300: train 0.684314 | dev 0.696215
+Iteration 320: train 0.683746 | dev 0.696070
+Iteration 340: train 0.683179 | dev 0.695925
+Iteration 360: train 0.682613 | dev 0.695781
+Iteration 380: train 0.682048 | dev 0.695636
+Iteration 400: train 0.681484 | dev 0.695492
+Iteration 420: train 0.680921 | dev 0.695348
+Iteration 440: train 0.680358 | dev 0.695205
+Iteration 460: train 0.679797 | dev 0.695062
+Iteration 480: train 0.679237 | dev 0.694919
+Iteration 500: train 0.678678 | dev 0.694776
+Iteration 520: train 0.678120 | dev 0.694634
+Iteration 540: train 0.677563 | dev 0.694492
+Iteration 560: train 0.677006 | dev 0.694351
+Iteration 580: train 0.676451 | dev 0.694210
+Iteration 600: train 0.675897 | dev 0.694069
+Iteration 620: train 0.675344 | dev 0.693928
+Iteration 640: train 0.674791 | dev 0.693788
+Iteration 660: train 0.674240 | dev 0.693648
+Iteration 680: train 0.673690 | dev 0.693509
+Iteration 700: train 0.673140 | dev 0.693370
+Iteration 720: train 0.672592 | dev 0.693231
+Iteration 740: train 0.672044 | dev 0.693092
+Iteration 760: train 0.671498 | dev 0.692954
+Iteration 780: train 0.670952 | dev 0.692816
+Iteration 800: train 0.670408 | dev 0.692679
+Iteration 820: train 0.669864 | dev 0.692542
+Iteration 840: train 0.669322 | dev 0.692405
+Iteration 860: train 0.668780 | dev 0.692268
+Iteration 880: train 0.668239 | dev 0.692132
+Iteration 900: train 0.667699 | dev 0.691996
+Iteration 920: train 0.667160 | dev 0.691861
+Iteration 940: train 0.666622 | dev 0.691725
+Iteration 960: train 0.666085 | dev 0.691590
+Iteration 980: train 0.665549 | dev 0.691456
+Iteration 1000: train 0.665014 | dev 0.691322
+Iteration 1020: train 0.664480 | dev 0.691188
+Iteration 1040: train 0.663947 | dev 0.691054
+Iteration 1060: train 0.663415 | dev 0.690921
+Iteration 1080: train 0.662883 | dev 0.690788
+Iteration 1100: train 0.662353 | dev 0.690655
+Iteration 1120: train 0.661823 | dev 0.690522
+Iteration 1140: train 0.661295 | dev 0.690390
+Iteration 1160: train 0.660767 | dev 0.690259
+Iteration 1180: train 0.660240 | dev 0.690127
+Iteration 1200: train 0.659714 | dev 0.689996
+Iteration 1220: train 0.659189 | dev 0.689865
+Iteration 1240: train 0.658665 | dev 0.689735
+Iteration 1260: train 0.658142 | dev 0.689604
+Iteration 1280: train 0.657620 | dev 0.689475
+Iteration 1300: train 0.657099 | dev 0.689345
+Iteration 1320: train 0.656578 | dev 0.689216
+Iteration 1340: train 0.656059 | dev 0.689087
+Iteration 1360: train 0.655540 | dev 0.688958
+Iteration 1380: train 0.655023 | dev 0.688830
+Iteration 1400: train 0.654506 | dev 0.688702
+Iteration 1420: train 0.653990 | dev 0.688574
+Iteration 1440: train 0.653475 | dev 0.688446
+Iteration 1460: train 0.652961 | dev 0.688319
+Iteration 1480: train 0.652447 | dev 0.688192
+Iteration 1500: train 0.651935 | dev 0.688066
+Iteration 1520: train 0.651424 | dev 0.687940
+Iteration 1540: train 0.650913 | dev 0.687814
+Iteration 1560: train 0.650403 | dev 0.687688
+Iteration 1580: train 0.649894 | dev 0.687562
+Iteration 1600: train 0.649386 | dev 0.687437
+Iteration 1620: train 0.648879 | dev 0.687313
+Iteration 1640: train 0.648373 | dev 0.687188
+Iteration 1660: train 0.647868 | dev 0.687064
+Iteration 1680: train 0.647363 | dev 0.686940
+Iteration 1700: train 0.646860 | dev 0.686816
+Iteration 1720: train 0.646357 | dev 0.686693
+Iteration 1740: train 0.645855 | dev 0.686570
+Iteration 1760: train 0.645354 | dev 0.686447
+Iteration 1780: train 0.644854 | dev 0.686325
+Iteration 1800: train 0.644355 | dev 0.686203
+Iteration 1820: train 0.643856 | dev 0.686081
+Iteration 1840: train 0.643359 | dev 0.685959
+Iteration 1860: train 0.642862 | dev 0.685838
+Iteration 1880: train 0.642366 | dev 0.685717
+Iteration 1900: train 0.641871 | dev 0.685596
+Iteration 1920: train 0.641377 | dev 0.685476
+Iteration 1940: train 0.640883 | dev 0.685355
+Iteration 1960: train 0.640391 | dev 0.685236
+Iteration 1980: train 0.639899 | dev 0.685116
+Iteration 2000: train 0.639408 | dev 0.684997
+Iteration 2020: train 0.638918 | dev 0.684878
+Iteration 2040: train 0.638429 | dev 0.684759
+Iteration 2060: train 0.637941 | dev 0.684640
+Iteration 2080: train 0.637453 | dev 0.684522
+Iteration 2100: train 0.636966 | dev 0.684404
+Iteration 2120: train 0.636481 | dev 0.684287
+Iteration 2140: train 0.635996 | dev 0.684169
+Iteration 2160: train 0.635511 | dev 0.684052
+Iteration 2180: train 0.635028 | dev 0.683935
+Iteration 2200: train 0.634545 | dev 0.683819
+Iteration 2220: train 0.634064 | dev 0.683702
+Iteration 2240: train 0.633583 | dev 0.683586
+Iteration 2260: train 0.633103 | dev 0.683471
+Iteration 2280: train 0.632623 | dev 0.683355
+Iteration 2300: train 0.632145 | dev 0.683240
+Iteration 2320: train 0.631667 | dev 0.683125
+Iteration 2340: train 0.631190 | dev 0.683010
+Iteration 2360: train 0.630714 | dev 0.682896
+Iteration 2380: train 0.630239 | dev 0.682782
+Iteration 2400: train 0.629764 | dev 0.682668
+Iteration 2420: train 0.629290 | dev 0.682554
+Iteration 2440: train 0.628818 | dev 0.682441
+Iteration 2460: train 0.628345 | dev 0.682328
+Iteration 2480: train 0.627874 | dev 0.682215
+Iteration 2500: train 0.627404 | dev 0.682102
+Iteration 2520: train 0.626934 | dev 0.681990
+Iteration 2540: train 0.626465 | dev 0.681878
+Iteration 2560: train 0.625997 | dev 0.681766
+Iteration 2580: train 0.625529 | dev 0.681655
+Iteration 2600: train 0.625063 | dev 0.681543
+Iteration 2620: train 0.624597 | dev 0.681432
+Iteration 2640: train 0.624132 | dev 0.681322
+Iteration 2660: train 0.623668 | dev 0.681211
+Iteration 2680: train 0.623204 | dev 0.681101
+Iteration 2700: train 0.622741 | dev 0.680991
+Iteration 2720: train 0.622280 | dev 0.680881
+Iteration 2740: train 0.621818 | dev 0.680772
+Iteration 2760: train 0.621358 | dev 0.680663
+Iteration 2780: train 0.620898 | dev 0.680554
+Iteration 2800: train 0.620439 | dev 0.680445
+Iteration 2820: train 0.619981 | dev 0.680337
+Iteration 2840: train 0.619524 | dev 0.680228
+Iteration 2860: train 0.619067 | dev 0.680120
+Iteration 2880: train 0.618612 | dev 0.680013
+Iteration 2900: train 0.618156 | dev 0.679905
+Iteration 2920: train 0.617702 | dev 0.679798
+Iteration 2940: train 0.617249 | dev 0.679691
+Iteration 2960: train 0.616796 | dev 0.679584
+Iteration 2980: train 0.616344 | dev 0.679478
+Iteration 3000: train 0.615892 | dev 0.679372
+Iteration 3020: train 0.615442 | dev 0.679266
+Iteration 3040: train 0.614992 | dev 0.679160
+Iteration 3060: train 0.614543 | dev 0.679055
+Iteration 3080: train 0.614095 | dev 0.678949
+Iteration 3100: train 0.613647 | dev 0.678844
+Iteration 3120: train 0.613200 | dev 0.678740
+Iteration 3140: train 0.612754 | dev 0.678635
+Iteration 3160: train 0.612309 | dev 0.678531
+Iteration 3180: train 0.611864 | dev 0.678427
+Iteration 3200: train 0.611420 | dev 0.678323
+Iteration 3220: train 0.610977 | dev 0.678219
+Iteration 3240: train 0.610534 | dev 0.678116
+Iteration 3260: train 0.610092 | dev 0.678013
+Iteration 3280: train 0.609651 | dev 0.677910
+Iteration 3300: train 0.609211 | dev 0.677808
+Iteration 3320: train 0.608772 | dev 0.677705
+Iteration 3340: train 0.608333 | dev 0.677603
+Iteration 3360: train 0.607894 | dev 0.677501
+Iteration 3380: train 0.607457 | dev 0.677399
+Iteration 3400: train 0.607020 | dev 0.677298
+Iteration 3420: train 0.606584 | dev 0.677197
+Iteration 3440: train 0.606149 | dev 0.677096
+Iteration 3460: train 0.605714 | dev 0.676995
+Iteration 3480: train 0.605281 | dev 0.676895
+Iteration 3500: train 0.604847 | dev 0.676794
+Iteration 3520: train 0.604415 | dev 0.676694
+Iteration 3540: train 0.603983 | dev 0.676594
+Iteration 3560: train 0.603552 | dev 0.676495
+Iteration 3580: train 0.603122 | dev 0.676395
+Iteration 3600: train 0.602692 | dev 0.676296
+Iteration 3620: train 0.602263 | dev 0.676197
+Iteration 3640: train 0.601835 | dev 0.676099
+Iteration 3660: train 0.601407 | dev 0.676000
+Iteration 3680: train 0.600980 | dev 0.675902
+Iteration 3700: train 0.600554 | dev 0.675804
+Iteration 3720: train 0.600129 | dev 0.675706
+Iteration 3740: train 0.599704 | dev 0.675609
+Iteration 3760: train 0.599280 | dev 0.675511
+Iteration 3780: train 0.598856 | dev 0.675414
+Iteration 3800: train 0.598433 | dev 0.675317
+Iteration 3820: train 0.598011 | dev 0.675221
+Iteration 3840: train 0.597590 | dev 0.675124
+Iteration 3860: train 0.597169 | dev 0.675028
+Iteration 3880: train 0.596749 | dev 0.674932
+Iteration 3900: train 0.596330 | dev 0.674836
+Iteration 3920: train 0.595911 | dev 0.674740
+Iteration 3940: train 0.595493 | dev 0.674645
+Iteration 3960: train 0.595076 | dev 0.674550
+Iteration 3980: train 0.594659 | dev 0.674455
+Iteration 4000: train 0.594243 | dev 0.674360
+Iteration 4020: train 0.593827 | dev 0.674266
+Iteration 4040: train 0.593413 | dev 0.674171
+Iteration 4060: train 0.592999 | dev 0.674077
+Iteration 4080: train 0.592585 | dev 0.673984
+Iteration 4100: train 0.592173 | dev 0.673890
+Iteration 4120: train 0.591761 | dev 0.673796
+Iteration 4140: train 0.591349 | dev 0.673703
+Iteration 4160: train 0.590938 | dev 0.673610
+Iteration 4180: train 0.590528 | dev 0.673517
+Iteration 4200: train 0.590119 | dev 0.673425
+Iteration 4220: train 0.589710 | dev 0.673332
+Iteration 4240: train 0.589302 | dev 0.673240
+Iteration 4260: train 0.588894 | dev 0.673148
+Iteration 4280: train 0.588488 | dev 0.673056
+Iteration 4300: train 0.588081 | dev 0.672965
+Iteration 4320: train 0.587676 | dev 0.672874
+Iteration 4340: train 0.587271 | dev 0.672782
+Iteration 4360: train 0.586867 | dev 0.672691
+Iteration 4380: train 0.586463 | dev 0.672601
+Iteration 4400: train 0.586060 | dev 0.672510
+Iteration 4420: train 0.585658 | dev 0.672420
+Iteration 4440: train 0.585256 | dev 0.672330
+Iteration 4460: train 0.584855 | dev 0.672240
+Iteration 4480: train 0.584454 | dev 0.672150
+Iteration 4500: train 0.584055 | dev 0.672060
+Iteration 4520: train 0.583655 | dev 0.671971
+Iteration 4540: train 0.583257 | dev 0.671882
+Iteration 4560: train 0.582859 | dev 0.671793
+Iteration 4580: train 0.582462 | dev 0.671704
+Iteration 4600: train 0.582065 | dev 0.671616
+Iteration 4620: train 0.581669 | dev 0.671528
+Iteration 4640: train 0.581273 | dev 0.671439
+Iteration 4660: train 0.580879 | dev 0.671351
+Iteration 4680: train 0.580484 | dev 0.671264
+Iteration 4700: train 0.580091 | dev 0.671176
+Iteration 4720: train 0.579698 | dev 0.671089
+Iteration 4740: train 0.579305 | dev 0.671002
+Iteration 4760: train 0.578914 | dev 0.670915
+Iteration 4780: train 0.578522 | dev 0.670828
+Iteration 4800: train 0.578132 | dev 0.670741
+Iteration 4820: train 0.577742 | dev 0.670655
+Iteration 4840: train 0.577353 | dev 0.670569
+Iteration 4860: train 0.576964 | dev 0.670483
+Iteration 4880: train 0.576576 | dev 0.670397
+Iteration 4900: train 0.576188 | dev 0.670311
+Iteration 4920: train 0.575801 | dev 0.670226
+Iteration 4940: train 0.575415 | dev 0.670141
+Iteration 4960: train 0.575029 | dev 0.670056
+Iteration 4980: train 0.574644 | dev 0.669971
+[tune] 1/1 (100.0%)
+All random seeds set to 51 for reproducibility
+0.9
+All files successfully written to /sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/experiments/zero_shot__EN__previous_target_next_True_highlight_empty__logreg_tfidf__seed51
+All experiments successfully run
