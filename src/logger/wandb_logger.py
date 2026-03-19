@@ -168,8 +168,17 @@ def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
     if "best_step" in best_curves:
         run.summary["best_step"] = int(best_curves["best_step"])
 
-    if best_curves.get("dev_macro_f1"):
-        run.summary["best_dev_macro_f1"] = float(max(best_curves["dev_macro_f1"]))
+
+def update_wandb_best_result_summary(run, best_result: dict | None) -> None:
+    """Update W&B summary with best scalar tuning results"""
+    if run is None or best_result is None:
+        return
+
+    if "best_dev_macro_f1" in best_result:
+        run.summary["best_dev_macro_f1"] = float(best_result["best_dev_macro_f1"])
+
+    if "best_train_macro_f1" in best_result:
+        run.summary["best_train_macro_f1"] = float(best_result["best_train_macro_f1"])
 
 
 def log_wandb_tuning_results_table(run, tuning_results: list[dict] | None) -> None:
@@ -188,7 +197,7 @@ def log_wandb_tuning_results_table(run, tuning_results: list[dict] | None) -> No
 
 
 def log_wandb_final_metrics(run, metrics: dict) -> None:
-    """Log final evaluation metrics to W&B summary."""
+    """Log final evaluation metrics to W&B summary"""
     if run is None:
         return
 
@@ -231,12 +240,7 @@ def log_wandb_artifacts(run, run_dir: Path) -> None:
     try:
         import wandb
     except ImportError:
-       return
-
-    try:
-        import wandb
-    except ImportError:
-       return
+        return
 
     updated_name = (
         f"{run.name}-outputs"
