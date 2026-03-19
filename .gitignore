@@ -7,7 +7,6 @@ build/
 .venv/
 .env
 
-
 runs/
 .DS_Store
 .ipynb_checkpoints/
@@ -18,6 +17,7 @@ runs/
 wandb/
 .wandb/
 wandb_cache/
+logs/
 
 .nltk_data/
 
