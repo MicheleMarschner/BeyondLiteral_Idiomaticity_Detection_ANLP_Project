@@ -15,7 +15,7 @@ ner_models = {
 _loaded_ner_models = {}
 
 def get_ner_model(lang):
-    """Return cached NER pipeline for one language."""
+    """Return cached NER pipeline for one language"""
     if lang not in ner_models:
         return None
 
@@ -34,10 +34,10 @@ def get_ner_model(lang):
 # we apply NER in batch to all texts of the split at once
 def apply_ner_batch(texts, languages):
     """
-    Inline NER tagging of a text.
+    Inline NER tagging of a text
     
     Returns:
-        Text with inline entity tags.
+        Text with inline entity tags
     """
 
     device_is_gpu = torch.cuda.is_available()

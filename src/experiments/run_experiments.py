@@ -1,17 +1,21 @@
+import os
+import argparse
 from pathlib import Path
 from itertools import product
 import importlib.util
-import os
-import argparse
 
 from typing import Dict, Any
 
+from config import Paths, PATHS
 from evaluation.metrics import compute_metrics, make_predictions, compute_metrics_per_language
 from utils.helper import set_seeds, create_experiment_dir, ensure_dirs
 from evaluation.reporting import save_artifacts, build_test_predictions
 from training import get_model
-from data.data import load_data_splits, build_inputs_for_splits, compute_and_check_split_stats
-from config import Paths, PATHS
+from data.data import (
+    load_data_splits, 
+    build_inputs_for_splits, 
+    compute_and_check_split_stats
+)
 from models.factory import get_model_runner
 from logger.wandb_logger import (
     init_wandb_run,
@@ -23,7 +27,7 @@ from logger.wandb_logger import (
 
 
 def parse_args():
-    """Parse command-line arguments for local or Slurm-based experiment execution."""
+    """Parse command-line arguments for local or Slurm-based experiment execution"""
     parser = argparse.ArgumentParser(description="Run experiment template locally or with Slurm array tasks.")
     parser.add_argument(
         "--experiments_path",
@@ -82,7 +86,7 @@ def expand_template(experiments_template):
 
 
 def select_run_configs_for_execution(run_configs, use_slurm: bool):
-    """Return either all run configs or the single config selected by Slurm array task id."""
+    """Return either all run configs or the single config selected by Slurm array task id"""
     if not use_slurm:
         return run_configs
 
@@ -203,7 +207,7 @@ def run_experiments(
 
 
 def main():
-    """Parse command-line arguments and run experiments."""
+    """Parse command-line arguments and run experiments"""
     args = parse_args()
     run_experiments(
         experiments_path=Path(args.experiments_path),

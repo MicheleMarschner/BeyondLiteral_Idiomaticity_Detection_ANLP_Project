@@ -1,3 +1,4 @@
+## Final parameter grid and results of parameter tuning on the baseline configuration
 mBERT_grid = {
     "tok_space": {
         "max_length": [256],
@@ -10,7 +11,7 @@ mBERT_grid = {
     }
 }
 
-
+## Final parameter grid and results of parameter tuning on the baseline configuration
 modernBERT_grid = {
     "tok_space": {
         "max_length": [128, 256],

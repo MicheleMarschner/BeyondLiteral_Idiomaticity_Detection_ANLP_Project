@@ -12,7 +12,7 @@ from typing import Dict, Sequence, Tuple, Any, List
 
 from utils.helper import set_seeds
 from models.BERTs.param_grid import mBERT_grid, modernBERT_grid
-from logger.wandb_logger import is_wandb_enabled, WandbDevCurveCallback
+from logger.wandb_logger import WandbDevCurveCallback
 
 
 def tokenize_function(
@@ -199,7 +199,6 @@ class BERTRunner:
                     logging_dir=str(run_dir / "logs"),
                     logging_steps=50,
                     run_name=run_name,
-                    #report_to="wandb" if is_wandb_enabled() else "none",
                     report_to="none"
                 )
 

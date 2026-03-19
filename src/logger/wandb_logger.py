@@ -11,7 +11,7 @@ load_dotenv()
 
 
 class WandbDevCurveCallback(TrainerCallback):
-    """Log train/dev curves to W&B during Trainer runs."""
+    """Log train/dev curves to W&B during Trainer runs"""
 
     def __init__(self, wandb_run=None):
         self.wandb_run = wandb_run
@@ -43,12 +43,12 @@ class WandbDevCurveCallback(TrainerCallback):
 
 
 def is_wandb_enabled() -> bool:
-    """Return whether W&B logging is enabled globally."""
+    """Return whether W&B logging is enabled globally"""
     return bool(WANDB_ENABLED)
 
 
 def init_wandb_run(config: dict[str, Any], run_dir: Path):
-    """Initialize a W&B run if enabled, otherwise return None."""
+    """Initialize a W&B run if enabled, otherwise return None"""
     if not is_wandb_enabled():
         return None
 
@@ -124,7 +124,7 @@ def update_wandb_split_stats_summary(
     is_too_small: bool,
     reasons: list[str] | None,
 ) -> None:
-    """Write split statistics and split-check results to W&B summary."""
+    """Write split statistics and split-check results to W&B summary"""
     if run is None or split_stats is None:
         return
 
@@ -150,7 +150,7 @@ def update_wandb_split_stats_summary(
 
 
 def update_wandb_best_params(run, best_params: dict | None) -> None:
-    """Update W&B config with the selected best hyperparameters."""
+    """Update W&B config with the selected best hyperparameters"""
     if run is None or best_params is None:
         return
 
@@ -161,7 +161,7 @@ def update_wandb_best_params(run, best_params: dict | None) -> None:
 
 
 def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
-    """Update W&B summary with best-step and best dev macro-F1 from saved curves."""
+    """Update W&B summary with best-step and best dev macro-F1 from saved curves"""
     if run is None or best_curves is None:
         return
 
@@ -173,7 +173,7 @@ def update_wandb_best_curves_summary(run, best_curves: dict | None) -> None:
 
 
 def log_wandb_tuning_results_table(run, tuning_results: list[dict] | None) -> None:
-    """Log tuning results as a W&B table."""
+    """Log tuning results as a W&B table"""
     if run is None or not tuning_results:
         return
 
@@ -224,9 +224,14 @@ def log_wandb_final_metrics(run, metrics: dict) -> None:
 
 
 def log_wandb_artifacts(run, run_dir: Path) -> None:
-    """Upload selected saved output files as a W&B artifact."""
+    """Upload selected saved output files as a W&B artifact"""
     if run is None:
         return
+    
+    try:
+        import wandb
+    except ImportError:
+       return
 
     try:
         import wandb
@@ -258,6 +263,6 @@ def log_wandb_artifacts(run, run_dir: Path) -> None:
 
 
 def finish_wandb_run(run) -> None:
-    """Finish a W&B run if it exists."""
+    """Finish a W&B run if it exists"""
     if run is not None:
         run.finish()
