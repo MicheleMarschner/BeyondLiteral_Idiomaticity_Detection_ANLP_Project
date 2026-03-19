@@ -15,7 +15,7 @@ load_dotenv()
 
 
 class WandbDevCurveCallback(TrainerCallback):
-    """Log train/dev curves to W&B during Trainer runs."""
+    """Log train/dev curves to W&B during Trainer runs"""
 
     def __init__(self, wandb_run=None):
         self.wandb_run = wandb_run
@@ -73,19 +73,20 @@ def init_wandb_run(config: dict[str, Any], run_dir: Path):
     features_str = "-".join(features) if features else "none"
 
     group = (
-        f"{config.get('setting')}"
-        f"__{config.get('language_mode')}"
-        f"__{config.get('language')}"
-        f"__{input_variant.get('context')}"
-        f"__{input_variant.get('transform')}"
-        f"__mwe{input_variant.get('include_mwe_segment')}"
-        f"__feat-{features_str}"
-    )
-
-    run_name = (
         f"{config.get('model_family')}"
         f"__{config.get('setting')}"
         f"__{config.get('language')}"
+        f"__{config.get('input_variant', {}).get('context')}"
+    )
+
+    run_name = (
+        f"{config.get('setting')}"
+        f"__{config.get('language')}"
+        f"__{input_variant.get('context')}"
+        f"_{input_variant.get('include_mwe_segment')}"
+        f"_{input_variant.get('transform')}"
+        f"_{features_str}"
+        f"__{config.get('model_family')}"
         f"__seed{config.get('seed')}"
     )
 

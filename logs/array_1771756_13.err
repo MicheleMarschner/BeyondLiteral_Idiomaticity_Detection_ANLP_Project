@@ -1,0 +1,99 @@
++ source /sc/home/michele.marschner/conda3/etc/profile.d/conda.sh
+++ export CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ export _CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ _CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ export _CE_M=
+++ _CE_M=
+++ export _CE_CONDA=
+++ _CE_CONDA=
+++ export CONDA_PYTHON_EXE=/sc/home/michele.marschner/conda3/bin/python
+++ CONDA_PYTHON_EXE=/sc/home/michele.marschner/conda3/bin/python
+++ export _CONDA_ROOT=/sc/home/michele.marschner/conda3
+++ _CONDA_ROOT=/sc/home/michele.marschner/conda3
+++ '[' -z x ']'
++ conda activate anlp
++ local cmd=activate
++ case "$cmd" in
++ __conda_activate activate anlp
++ '[' -n '' ']'
++ local ask_conda
+++ PS1=
+++ __conda_exe shell.posix activate anlp
+++ '[' -n '' ']'
+++ /sc/home/michele.marschner/conda3/bin/conda shell.posix activate anlp
++ ask_conda='export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+PS1='\''(anlp) '\''
+export PATH='\''/sc/home/michele.marschner/conda3/envs/anlp/bin:/sc/home/michele.marschner/conda3/condabin:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/sc/home/michele.marschner/.vscode-server/cli/servers/Stable-ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'\''
+export CONDA_PREFIX='\''/sc/home/michele.marschner/conda3/envs/anlp'\''
+export CONDA_SHLVL='\''2'\''
+export CONDA_DEFAULT_ENV='\''anlp'\''
+export CONDA_PROMPT_MODIFIER='\''(anlp) '\''
+export CONDA_PREFIX_1='\''/sc/home/michele.marschner/conda3'\''
+export CONDA_EXE='\''/sc/home/michele.marschner/conda3/bin/conda'\''
+export _CONDA_EXE='\''/sc/home/michele.marschner/conda3/bin/conda'\''
+export CONDA_PYTHON_EXE='\''/sc/home/michele.marschner/conda3/bin/python'\''
+export _CONDA_ROOT='\''/sc/home/michele.marschner/conda3'\'''
++ eval 'export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+PS1='\''(anlp) '\''
+export PATH='\''/sc/home/michele.marschner/conda3/envs/anlp/bin:/sc/home/michele.marschner/conda3/condabin:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/sc/home/michele.marschner/.vscode-server/cli/servers/Stable-ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'\''
+export CONDA_PREFIX='\''/sc/home/michele.marschner/conda3/envs/anlp'\''
+export CONDA_SHLVL='\''2'\''
+export CONDA_DEFAULT_ENV='\''anlp'\''
+export CONDA_PROMPT_MODIFIER='\''(anlp) '\''
+export CONDA_PREFIX_1='\''/sc/home/michele.marschner/conda3'\''
+export CONDA_EXE='\''/sc/home/michele.marschner/conda3/bin/conda'\''
+export _CONDA_EXE='\''/sc/home/michele.marschner/conda3/bin/conda'\''
+export CONDA_PYTHON_EXE='\''/sc/home/michele.marschner/conda3/bin/python'\''
+export _CONDA_ROOT='\''/sc/home/michele.marschner/conda3'\'''
+++ export _CE_M=
+++ _CE_M=
+++ export _CE_CONDA=
+++ _CE_CONDA=
+++ PS1='(anlp) '
+++ export PATH=/sc/home/michele.marschner/conda3/envs/anlp/bin:/sc/home/michele.marschner/conda3/condabin:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/sc/home/michele.marschner/.vscode-server/cli/servers/Stable-ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+++ PATH=/sc/home/michele.marschner/conda3/envs/anlp/bin:/sc/home/michele.marschner/conda3/condabin:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/sc/home/michele.marschner/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/sc/home/michele.marschner/.vscode-server/cli/servers/Stable-ce099c1ed25d9eb3076c11e4a280f3eb52b4fbeb/server/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+++ export CONDA_PREFIX=/sc/home/michele.marschner/conda3/envs/anlp
+++ CONDA_PREFIX=/sc/home/michele.marschner/conda3/envs/anlp
+++ export CONDA_SHLVL=2
+++ CONDA_SHLVL=2
+++ export CONDA_DEFAULT_ENV=anlp
+++ CONDA_DEFAULT_ENV=anlp
+++ export 'CONDA_PROMPT_MODIFIER=(anlp) '
+++ CONDA_PROMPT_MODIFIER='(anlp) '
+++ export CONDA_PREFIX_1=/sc/home/michele.marschner/conda3
+++ CONDA_PREFIX_1=/sc/home/michele.marschner/conda3
+++ export CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ export _CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ _CONDA_EXE=/sc/home/michele.marschner/conda3/bin/conda
+++ export CONDA_PYTHON_EXE=/sc/home/michele.marschner/conda3/bin/python
+++ CONDA_PYTHON_EXE=/sc/home/michele.marschner/conda3/bin/python
+++ export _CONDA_ROOT=/sc/home/michele.marschner/conda3
+++ _CONDA_ROOT=/sc/home/michele.marschner/conda3
++ __conda_hashr
++ '[' -n '' ']'
++ '[' -n '' ']'
++ hash -r
++ cd /sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project
++ mkdir -p logs
++ nvidia-smi
++ python -c 'import torch; print('\''cuda available:'\'', torch.cuda.is_available()); print('\''device count:'\'', torch.cuda.device_count())'
++ export HF_HOME=/sc/home/michele.marschner/.cache/huggingface
++ HF_HOME=/sc/home/michele.marschner/.cache/huggingface
++ export TRANSFORMERS_CACHE=/sc/home/michele.marschner/.cache/huggingface/transformers
++ TRANSFORMERS_CACHE=/sc/home/michele.marschner/.cache/huggingface/transformers
++ export HF_HUB_CACHE=/sc/home/michele.marschner/.cache/huggingface/hub
++ HF_HUB_CACHE=/sc/home/michele.marschner/.cache/huggingface/hub
++ python src/experiments/run_experiments.py --experiments_path src/experiments/experiments_template.py --slurm
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from WANDB_API_KEY.
+wandb: Currently logged in as: michele-marschner-1 (michele-marschner-1-university-of-potsdam) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run mnw9uelz
+wandb: Tracking run with wandb version 0.25.1
+wandb: Run data is saved locally in /sc/home/michele.marschner/project/beyondliteral_idiomaticity_detection_anlp_project/experiments/zero_shot__EN__previous_target_next_True_highlight_glosses__logreg_word2vec__seed51/wandb/run-20260319_092133-mnw9uelz
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run zero_shot__EN__previous_target_next_True_highlight_glosses__logreg_word2vec__seed51
+wandb: ⭐️ View project at https://wandb.ai/michele-marschner-1-university-of-potsdam/beyondliteral_idiomaticity_detection_anlp
+wandb: 🚀 View run at https://wandb.ai/michele-marschner-1-university-of-potsdam/beyondliteral_idiomaticity_detection_anlp/runs/mnw9uelz
