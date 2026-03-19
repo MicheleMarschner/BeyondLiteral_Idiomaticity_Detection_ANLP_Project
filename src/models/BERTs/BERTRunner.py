@@ -2,7 +2,14 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 from sklearn.model_selection import ParameterGrid
-from transformers import Trainer, TrainingArguments, AutoModelForSequenceClassification, PreTrainedModel
+from transformers import (
+    Trainer, 
+    TrainingArguments, 
+    AutoModelForSequenceClassification, 
+    PreTrainedTokenizerBase, 
+    PreTrainedModel
+)
+from datasets import Dataset
 
 from typing import Dict, Tuple, Any, List
 
@@ -119,7 +126,7 @@ class BERTRunner:
         config: Dict[str, Any],
         train_df: pd.DataFrame,
         test_df: pd.DataFrame
-    ):
+    ) -> Tuple[Dataset, Dataset, PreTrainedTokenizerBase]:
         """Fit a featurizer on train text and transform train/test into feature matrices"""
 
         set_seeds(config['seed'])

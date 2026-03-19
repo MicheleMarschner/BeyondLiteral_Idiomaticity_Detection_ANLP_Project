@@ -18,7 +18,8 @@ def _load_model(model_family: str, model_path: Path, best_params: Dict[str, str]
     """Load existing model from checkpoint"""
 
     if model_family.startswith("logreg"):
-            model = joblib.load(model_path)
+        bundle = joblib.load(model_path)
+        model = bundle["model"]
     else:
         # Load model with model weights and tokenizer
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
@@ -74,7 +75,7 @@ def get_model(
         # save artifacts locally
         tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
         best_result = tuning_results[0] if tuning_results else None
-        
+
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
         write_json(experiment_dir / "tuning_results.json", tuning_results)

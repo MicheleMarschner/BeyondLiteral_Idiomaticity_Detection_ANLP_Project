@@ -47,7 +47,7 @@ class LogisticRegression:
         y_dev: Any, 
         threshold: float=0.5
     ) -> Tuple[float, float, Dict[str, Any]]:
-        """Train the model; return tracked losses and best validation macro-F1"""
+        """Train the model and return best dev macro-F1, best train macro-F1, and learning curves"""
         
         set_seeds(config['seed'])
         

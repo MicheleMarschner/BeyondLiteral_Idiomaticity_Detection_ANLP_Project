@@ -19,7 +19,7 @@ class LogRegRunner:
         config: Dict[str, Any], 
         train_df: pd.DataFrame,
         test_df: pd.DataFrame
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> Tuple[Tuple[Any, pd.Series], Tuple[Any, pd.Series], Any]:
         """Fit a featurizer on train text and transform train/test into feature matrices"""
         
         set_seeds(config['seed'])
@@ -55,7 +55,7 @@ class LogRegRunner:
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
         threshold: float=0.5
-    ) -> Tuple[LogisticRegression, Dict[str, Any], Dict[str, Any]]:
+    ) -> Tuple[LogisticRegression, list[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
         
         model_family = config["model_family"]
