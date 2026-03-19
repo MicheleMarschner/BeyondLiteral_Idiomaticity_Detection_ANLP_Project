@@ -17,6 +17,7 @@ runs/
 # Weights & Biases
 wandb/
 .wandb/
+wandb_cache/
 
 .nltk_data/
 
