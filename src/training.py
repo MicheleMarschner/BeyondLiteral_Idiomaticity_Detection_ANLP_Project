@@ -6,7 +6,12 @@ import pandas as pd
 from typing import Dict, Union, Tuple, Any
 
 from utils.helper import ensure_dir, write_json, read_json
-from logger.wandb_logger import update_wandb_best_params, update_wandb_best_curves_summary, log_wandb_tuning_results_table
+from logger.wandb_logger import (
+    update_wandb_best_params, 
+    update_wandb_best_curves_summary, 
+    update_wandb_best_result_summary,
+    log_wandb_tuning_results_table
+)
 
 
 def _load_model(model_family: str, model_path: Path, best_params: Dict[str, str]) -> Union[nn.Module, Any]:
@@ -68,6 +73,8 @@ def get_model(
 
         # save artifacts locally
         tuning_results.sort(key=lambda d: d.get("best_dev_macro_f1", float("-inf")), reverse=True)
+        best_result = tuning_results[0] if tuning_results else None
+        
         ensure_dir(experiment_dir)
         write_json(experiment_dir / "best_params.json", best_params)
         write_json(experiment_dir / "tuning_results.json", tuning_results)
@@ -77,6 +84,7 @@ def get_model(
         # save artifacts to wandb
         update_wandb_best_params(wandb_run, best_params)
         update_wandb_best_curves_summary(wandb_run, best_curves)
+        update_wandb_best_result_summary(wandb_run, best_result)
         log_wandb_tuning_results_table(wandb_run, tuning_results)
 
     else:    # Re-instantiate a new model and load the best weights (Frozen state)

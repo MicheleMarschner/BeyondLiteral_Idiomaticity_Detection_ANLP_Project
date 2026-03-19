@@ -7,7 +7,7 @@ from utils.helper import ensure_dir, read_json
 
 
 def _extract_eval_language(exp_config: dict) -> str:
-    """Return the evaluation language label for one run config."""
+    """Return the evaluation language label for one run config"""
     mode = exp_config.get("language_mode")
     language = exp_config.get("language")
 
