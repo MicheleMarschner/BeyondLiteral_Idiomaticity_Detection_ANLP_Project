@@ -54,6 +54,7 @@ class LogRegRunner:
         model_path: Path,
         train_df: pd.DataFrame,
         dev_df: pd.DataFrame,
+        wandb_run: Any = None,
         threshold: float=0.5
     ) -> Tuple[LogisticRegression, list[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
         """Grid-search hyperparameters, save the best model bundle, and return best model and other results"""
@@ -87,7 +88,15 @@ class LogRegRunner:
             
             model = self.initialize(params, config['seed'], config['model_family'])
 
-            best_dev_macro_f1, best_train_macro_f1, loss_curves = model.fit(config, X_train, y_train, X_dev, y_dev)
+            best_dev_macro_f1, best_train_macro_f1, loss_curves = model.fit(
+                config=config,
+                X_train=X_train,
+                y_train=y_train,
+                X_dev=X_dev,
+                y_dev=y_dev,
+                wandb_run=wandb_run,
+                threshold=threshold,
+            )
 
             results.append({
                 **params,
