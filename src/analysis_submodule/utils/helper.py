@@ -107,12 +107,12 @@ def load_results_overviews(
         evaluate_subslices(split_type=split_type)
     slices_df = read_csv_data(slice_csv_path)
 
-    masking_csv_path = results_sub_dir / "stress_masking_summary.csv"
-    if not masking_csv_path.exists():
-        run_stress_masking_over_all_runs(experiments_root, results_root)
-    masking_df = read_csv_data(masking_csv_path)
+    #masking_csv_path = results_sub_dir / "stress_masking_summary.csv"
+    #if not masking_csv_path.exists():
+        #run_stress_masking_over_all_runs(experiments_root, results_root)
+    #masking_df = read_csv_data(masking_csv_path)
 
-    return master_df, slices_df, masking_df
+    return master_df, slices_df #masking_df
 
 
 def create_folder_structure(results_sub_dir: Path):

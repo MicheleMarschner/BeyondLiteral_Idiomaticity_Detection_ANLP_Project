@@ -26,8 +26,8 @@ class LogRegRunner:
 
         featurizer = build_featurizer(config['model_family'], params)
         
-        X_train, y_train = train_df['input'], train_df['label'].astype(int) # changed label_col default to "label" according to the data files, was "Label" before
-        X_test, y_test   = test_df['input'],  test_df['label'].astype(int)  # changed label_col default to "label" according to the data files, was "Label" before
+        X_train, y_train = train_df['input'], train_df['label'].astype(int) 
+        X_test, y_test   = test_df['input'],  test_df['label'].astype(int) 
 
         X_train = featurizer.fit_transform(X_train)
         X_test  = featurizer.transform(X_test)

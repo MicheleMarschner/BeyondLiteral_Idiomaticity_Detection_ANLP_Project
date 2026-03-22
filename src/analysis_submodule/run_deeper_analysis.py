@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-from analysis.evaluate_subslices import evaluate_subslices
-from analysis_submodule.stress_masking import run_stress_masking_all
-from evaluation.run_evaluation import run_evaluation
-from analysis_submodule.slice_analysis import compute_hard_control_gap_all_runs, hard_control_gap_for_run, plot_hard_control_gap_aggregated
+#from analysis.evaluate_subslices import evaluate_subslices
+#from analysis_submodule.stress_masking import run_stress_masking_all
+#from evaluation.run_evaluation import run_evaluation
+#from analysis_submodule.slice_analysis import compute_hard_control_gap_all_runs, hard_control_gap_for_run, plot_hard_control_gap_aggregated
 from analysis_submodule.language_training_analysis import plot_delta_train_bars_g2_per_model_family, plot_delta_train_over_variants_grid, plot_language_setup_connected_big_figure, table_train_delta_baseline, tables_train_delta_context_variant
 from analysis_submodule.utils.plots import plot_loss_curves_flat_comparison, plot_loss_curves_nested
 from utils.helper import read_json
@@ -45,7 +45,7 @@ def run_deeper_analysis(experiments_root: Path, results_root: Path) -> None:
     plot_baseline_loss_curves(experiments_root, plots_path)
 
     # load aggregated results from experiments
-    master_df, slices_df, masking_df = load_results_overviews(experiments_root, results_root, results_sub_dir)
+    master_df, slices_df = load_results_overviews(experiments_root, results_root, results_sub_dir)
 
     plot_delta_train_over_variants_grid(
         master_df,
