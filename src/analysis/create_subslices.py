@@ -39,6 +39,7 @@ def add_train_mwe_freq_bin_cols(split_df: pd.DataFrame, train_df: pd.DataFrame) 
     df["train_mwe_freq_bin"] = _make_freq_bins(df["mwe_freq"]).astype(str)  
     # add seen/unseen flag for later analysis of one-shot vs. zero-shot
     df["seen_mwe_type"] = df["train_mwe_freq"] > 0
+    df["seen_mwe_type"] = df["seen_mwe_type"].astype("boolean")
     
     return df
 
@@ -82,6 +83,7 @@ def identify_potentially_ambiguous_mwe(df: pd.DataFrame, min_total: int=5) -> pd
     # True if the instance belongs to an ambiguous (Language, MWE) type
     is_amb = df["minority_label"].notna()
     df["is_ambiguous_mwe"] = is_amb
+    df["is_ambiguous_mwe"] = df["is_ambiguous_mwe"].astype("boolean")
     
     df["slice_minority_instance"] = ""      # slice_minority_instance
 

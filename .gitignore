@@ -7,16 +7,23 @@ build/
 .venv/
 .env
 
-.nltk_data/
-
 runs/
 .DS_Store
 .ipynb_checkpoints/
 **/*.pth
 **/*.pth.tar
 
+# Weights & Biases
+wandb/
+.wandb/
+wandb_cache/
+logs/
+
+.nltk_data/
+
 ./src/analysis_submodule
 experiments
 evaluation.md
 experiments.tar.gz
 experiments_tar.md
+/documentation/personal

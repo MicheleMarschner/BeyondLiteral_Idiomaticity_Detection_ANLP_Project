@@ -19,7 +19,7 @@ COPY pyproject.toml README.md /app/
 COPY src /app/src
 
 # Installs project’s dependencies
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -e . gdown
 
 # NLTK data
 ENV NLTK_DATA=/usr/local/share/nltk_data
@@ -28,5 +28,4 @@ RUN python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
 RUN mkdir -p /app/experiments /app/results
 
 # Default command: show help
-ENTRYPOINT ["python", "-m", "src.main"]
-CMD ["--help"]
+CMD ["python", "-m", "src.main", "--help"]

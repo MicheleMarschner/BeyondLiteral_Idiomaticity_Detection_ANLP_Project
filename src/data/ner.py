@@ -1,76 +1,43 @@
 import torch
 from transformers import pipeline
 
-from config import DEVICE
+from config import DEVICE, is_cluster_run
 
 
 # load NER models for each language, using GPU if available
 
 ner_models = {
-    "EN": pipeline(
-        "ner",
-        model="Babelscape/wikineural-multilingual-ner",
-        aggregation_strategy="max",
-        device=DEVICE,
-    ),
-    "PT": pipeline(
-        "ner",
-        model="Babelscape/wikineural-multilingual-ner",
-        aggregation_strategy="max",
-        device=DEVICE,
-    ),
-    "GL": pipeline(
-        "ner",
-        model="marcosgg/bert-base-gl-SLI-NER",
-        aggregation_strategy="max",
-        device=DEVICE,
-    ),
+    "EN": "Babelscape/wikineural-multilingual-ner",
+    "PT": "Babelscape/wikineural-multilingual-ner",
+    "GL": "marcosgg/bert-base-gl-SLI-NER",
 }
 
+_loaded_ner_models = {}
 
+def get_ner_model(lang):
+    """Return cached NER pipeline for one language"""
+    if lang not in ner_models:
+        return None
 
-'''
-def apply_ner(text: str, language: str) -> str:
-    """
-    Inline NER tagging of a text.
-    
-    Returns:
-        Text with inline entity tags.
-    """
-
-    if not text or language not in ner_models:
-        return text
-
-    model = ner_models[language]
-    entities = model(text)
-
-    # Sort by descending offset to prevent index shift
-    entities_sorted = sorted(entities, key=lambda x: x["start"], reverse=True)
-
-    tagged_text = text
-
-    for ent in entities_sorted:
-        start, end = ent["start"], ent["end"]
-        label = ent["entity_group"]
-
-        tagged_text = (
-            tagged_text[:start]
-            + f"[{label}] {tagged_text[start:end]} [/{label}]"
-            + tagged_text[end:]
+    if lang not in _loaded_ner_models:
+        _loaded_ner_models[lang] = pipeline(
+            "ner",
+            model=ner_models[lang],
+            aggregation_strategy="max",
+            device=DEVICE,
         )
 
-    return tagged_text
+    return _loaded_ner_models[lang]
 
-'''
 
 # batched version of named_entity_recognition, since row wise application was slow, 
 # we apply NER in batch to all texts of the split at once
 def apply_ner_batch(texts, languages):
     """
-    Inline NER tagging of a text.
+    Inline NER tagging of a text
     
     Returns:
-        Text with inline entity tags.
+        Text with inline entity tags
     """
 
     device_is_gpu = torch.cuda.is_available()
@@ -94,7 +61,7 @@ def apply_ner_batch(texts, languages):
                 tagged_texts[i] = texts[i]
             continue
 
-        model = ner_models[lang]
+        model = get_ner_model(lang)
 
         lang_texts = [texts[i] for i in indices]
 

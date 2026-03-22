@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 
 @dataclass(frozen=True)
 class ExperimentTemplate:
-    """Defines the experiment grid used to generate runs."""
+    """Defines the experiment grid used to generate runs"""
     settings: List[str] 
     language_mode: str
     languages: List[str]
@@ -15,11 +15,24 @@ class ExperimentTemplate:
 
 EXPERIMENTS = ExperimentTemplate(
     settings=["zero_shot"],
-    language_mode="cross_lingual",
-    languages=["EN,PT"],
+    language_mode="multilingual",
+    languages=["EN,PT,GL"],
     input_variant=[
         {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": []},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": ["glosses"]},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "none", "features": ["ner"]},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "highlight", "features": []},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "highlight", "features": ["glosses"]},
+        {"context": "previous_target_next", "include_mwe_segment": True, "transform": "highlight", "features": ["ner"]},
+
+        {"context": "target", "include_mwe_segment": True, "transform": "none", "features": []},
+        {"context": "target", "include_mwe_segment": True, "transform": "none", "features": ["glosses"]},
+        {"context": "target", "include_mwe_segment": True, "transform": "none", "features": ["ner"]},
+        {"context": "target", "include_mwe_segment": True, "transform": "highlight", "features": []},
+        {"context": "target", "include_mwe_segment": True, "transform": "highlight", "features": ["glosses"]},
+        {"context": "target", "include_mwe_segment": True, "transform": "highlight", "features": ["ner"]},
+
     ],
-    model_families=["logreg_tfidf"],
+    model_families=["logreg_tfidf", "logreg_word2vec", "mBERT"],
     seeds=[51]
 )
