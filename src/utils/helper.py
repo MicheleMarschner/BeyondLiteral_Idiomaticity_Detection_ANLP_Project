@@ -134,6 +134,24 @@ def build_experiment_identifier(experiment_config: Dict[str, Any]) -> str:
     return f"{setting}__{language}__{input_str}__{model_family}__seed{seed}"
 
 
+def create_experiment_dir(experiment_config: Dict[str, Any], run_dir: Path, overwrite: bool=False) -> Path:
+    """Create a run folder for an experiment to store outputs and artifacts; if it exists, fail unless `overwrite=True` (then recreate it)"""
+    folder_name = build_experiment_identifier(experiment_config)
+    experiment_dir = Path(run_dir) / folder_name
+
+    if experiment_dir.exists():
+        if not overwrite:
+            raise FileExistsError(
+                f"Run folder already exists: {experiment_dir}\n"
+                f"Set overwrite=True to rerun and overwrite artifacts."
+            )
+        # overwrite=True -> wipe the old run folder for a clean rerun
+        shutil.rmtree(experiment_dir)
+
+    ensure_dir(experiment_dir)
+    return experiment_dir
+
+
 def to_numpy_int(y: Sequence[Any]) -> np.ndarray:
     """Convert list to int numpy array"""
     arr = np.asarray(list(y))

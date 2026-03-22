@@ -5,8 +5,6 @@ from config import PATHS
 from experiments.run_experiments import run_experiments
 from evaluation.run_evaluation import run_evaluation
 from analysis.evaluate_subslices import evaluate_subslices
-from analysis_submodule.stress_masking import run_stress_masking_all
-from analysis_submodule.run_deeper_analysis import run_deeper_analysis
 from utils.helper import ensure_dirs
 
 def main() -> None:
@@ -29,9 +27,7 @@ def main() -> None:
         run_evaluation()
     
     if args.action == "analyse":
-        #run_stress_masking_all(experiments_root=PATHS.runs, results_root=PATHS.results)
         evaluate_subslices(project_paths=PATHS)
-        run_deeper_analysis(experiments_root=PATHS.runs, results_root=PATHS.results)
     
 if __name__ == "__main__":
     main()
