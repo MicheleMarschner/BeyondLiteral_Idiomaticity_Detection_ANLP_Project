@@ -1,0 +1,5 @@
+eval_language,context_label,mean_abs_gap,max_abs_gap,mean_signed_gap,n_variants
+EN,Full,0.010634944082930385,0.017967041735834403,-0.010535460773460183,6
+EN,Target,0.011543248784084218,0.027855593080545693,-0.009885535814435882,6
+PT,Full,0.0,0.0,0.0,6
+PT,Target,0.0,0.0,0.0,6
