@@ -39,7 +39,7 @@ Overall, the results highlight both the potential of multilingual transformer mo
 
 ### Cross-Lingual Transfer: English to Portuguese
 
-![Cross-lingual transfer from English to Portuguese](images/figure4_cross_lingual_transfer.png)
+![Cross-lingual transfer from English to Portuguese](pt_transfer_comparison_baseline.png)
 
 **Figure 4:** Portuguese Zero-Shot macro-F1 under three training conditions: Portuguese-only (PT → PT), multilingual (EN+PT → PT), and English-only (EN → PT). Multilingual training performs best, while English-only training shows partial transfer.
 
