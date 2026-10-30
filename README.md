@@ -33,7 +33,7 @@ Overall, the results highlight both the potential of multilingual transformer mo
 
 ### Monolingual vs. Multilingual Training
 
-<img src="delta_multi_vs_mono_bars__mBERT__zero_shot.png" width="600" alt="Multilingual vs. monolingual training results"/>
+<img src="delta_multi_vs_mono_bars__mBERT__zero_shot.png" width="400" alt="Multilingual vs. monolingual training results"/>
 
 **Figure 2:** Change in Zero-Shot macro-F1 from monolingual to multilingual mBERT training across input variants. Portuguese benefits consistently, while results for English are mixed.
 
