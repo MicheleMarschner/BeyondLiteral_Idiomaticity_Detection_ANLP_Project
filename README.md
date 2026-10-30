@@ -179,9 +179,6 @@ Expected and needed raw files in `data/raw/Data/`:
 The preprocessed splits are included in the repository for convenience, but they can also be re-generated using:
 `data/preprocessed/data_preprocessing_splitting.py`
 
-### Experiments Folder
-For running the 
-
 
 ## Experiment Configuration
 
