@@ -2,7 +2,34 @@
 
 This project implements the SemEval-2022 Task 2, Subtask A: Multilingual Idiomaticity Detection. It's a binary classification task: given a multiword expression (MWE) in context, predict whether it is used idiomatically or literally. The dataset is multilingual (EN/PT/GL) and includes the target sentence plus surrounding context (previous/next sentence), allowing us to study how different context and additional signals influence idiomaticity detection.
 
----
+
+## Team & My Contributions
+
+This project was developed as part of a three-person university team.
+
+My contributions included:
+
+- **Experimental pipeline:** Designed, implemented, and maintained the modular training, evaluation, and analysis pipeline, including experiment tracking with Weights & Biases and Docker-based reproducibility.
+- **Model implementation:** Developed custom logistic regression baselines using TF-IDF and Word2Vec features, validated against scikit-learn implementations.
+- **Transformer experiments:** Conducted monolingual mBERT fine-tuning experiments.
+- **Experimental analysis:** Contributed to the evaluation design and analysis of model behavior, including frequency-based and difficult-sample subsets.
+- **Project development:** Contributed to the initial project planning, technical documentation, and adapting the pipeline for execution on the GPU cluster.
+
+
+
+## Key Findings
+
+The experiments highlighted four main findings:
+
+- **Transformer vs. lexical baselines:** mBERT substantially outperformed the logistic regression baselines, particularly in Portuguese.
+- **Multilingual training:** Multilingual fine-tuning improved Portuguese performance more consistently than English, while the benefits of additional contextual and linguistic signals varied across languages.
+- **Zero-Shot vs. One-Shot:** Even minimal expression-specific supervision improved mBERT performance, whereas the lexical baselines benefited only marginally.
+- **Cross-lingual transfer and context reliance:** Some idiomaticity-related knowledge transferred from English to Portuguese, but direct Portuguese supervision remained important. Masking experiments also revealed a strong dependence on lexical surface cues rather than context alone.
+
+Overall, the results highlight both the potential of multilingual transformer models and the challenges of generalizing beyond lexical patterns.
+
+
+
 ## Installation
 
 The setup was tested on macOS. It uses docker and docker compose.
@@ -38,7 +65,7 @@ The repository has the following high-level structure:
    └── README.md                # main project documentation (how to run, reproduce, results)
    ```
 
----
+
 ## Weights & Biases
 
 The experiment runs are available in the public W&B project:
@@ -64,7 +91,6 @@ WANDB_PROJECT=beyondliteral_idiomaticity_detection_anlp
 
 If no valid W&B configuration is provided, the project will continue to run without W&B logging.
 
----
 
 ## Running with Docker (recommended)
 
@@ -118,7 +144,6 @@ When running `eval` or `analyse`, the container will automatically attempt to do
 
 If the automatic download fails, manually download the archive from [here](https://drive.google.com/file/d/1rwKbbOPYdG6T8DcFCTzoPhzoZVyy0JtL/view?usp=sharing), ensure it is available as a .tar.gz file, and extract it in the project root.
 
----
 
 ## Data
 This project uses the official dataset for SemEval-2022 Task 2 (Multilingual Idiomaticity Detection). The repository already contains the dataset files needed to run the pipeline (see `data/raw/Data/`).
@@ -136,7 +161,6 @@ The preprocessed splits are included in the repository for convenience, but they
 ### Experiments Folder
 For running the 
 
----
 
 ## Experiment Configuration
 
@@ -182,7 +206,6 @@ We support multiple model families for comparison:
 ### Seed (`seed`)
 - `seed` controls reproducibility. We run each configuration with a fixed seed by default
 
----
 
 ## Outputs and artifacts
 
@@ -215,7 +238,6 @@ The evaluation and analysis stages produce aggregated files that combine results
 
 - `./results/<teammember>`  Final plots and tables for the report
 
----
 
 ## Limitations
 - **Single-seed runs:** Most experiments were run with one fixed seed due to computational constraints.  
