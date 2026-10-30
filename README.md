@@ -29,6 +29,22 @@ The experiments highlighted four main findings:
 Overall, the results highlight both the potential of multilingual transformer models and the challenges of generalizing beyond lexical patterns.
 
 
+## Selected Results
+
+### Monolingual vs. Multilingual Training
+
+![Effect of multilingual training on English and Portuguese across input variants](delta_multi_vs_mono_bars__mBERT__zero_shot.png)
+
+**Figure 2:** Change in Zero-Shot macro-F1 from monolingual to multilingual mBERT training across input variants. Portuguese benefits consistently, while results for English are mixed.
+
+### Cross-Lingual Transfer: English to Portuguese
+
+![Cross-lingual transfer from English to Portuguese](images/figure4_cross_lingual_transfer.png)
+
+**Figure 4:** Portuguese Zero-Shot macro-F1 under three training conditions: Portuguese-only (PT → PT), multilingual (EN+PT → PT), and English-only (EN → PT). Multilingual training performs best, while English-only training shows partial transfer.
+
+
+
 
 ## Installation
 
