@@ -28,6 +28,8 @@ The experiments highlighted four main findings:
 
 Overall, the results highlight both the potential of multilingual transformer models and the challenges of generalizing beyond lexical patterns.
 
+**Full Report:** [BeyondLiteral – Multilingual Idiomaticity Detection (PDF)](ANLP_project_report.pdf)
+
 
 ## Selected Results
 
