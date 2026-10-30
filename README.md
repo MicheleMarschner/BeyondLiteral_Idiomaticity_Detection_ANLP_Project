@@ -46,8 +46,6 @@ Overall, the results highlight both the potential of multilingual transformer mo
 **Figure 4:** Portuguese Zero-Shot macro-F1 under three training conditions: Portuguese-only (PT → PT), multilingual (EN+PT → PT), and English-only (EN → PT). Multilingual training performs best, while English-only training shows partial transfer.
 
 
-
-
 ## Installation
 
 The setup was tested on macOS. It uses docker and docker compose.
@@ -60,14 +58,19 @@ The setup was tested on macOS. It uses docker and docker compose.
 * Docker
 * docker-compose 
 
-### Clone the repository
+
+### Clone the Repository
+
+Using HTTPS:
 
 ```bash
-git clone https://gitup.uni-potsdam.de/marschner5/beyondliteral_idiomaticity_detection_anlp_project.git to /your_desired_path/<myDeployment>
+git clone https://github.com/MicheleMarschner/BeyondLiteral_Idiomaticity_Detection_ANLP_Project.git
 ```
-or if you are using ssh: 
+
+Or using SSH:
+
 ```bash
-git clone git@gitup.uni-potsdam.de:marschner5/beyondliteral_idiomaticity_detection_anlp_project.git
+git clone git@github.com:MicheleMarschner/BeyondLiteral_Idiomaticity_Detection_ANLP_Project.git
 ```
 
 The repository has the following high-level structure:
